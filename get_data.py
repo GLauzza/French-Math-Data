@@ -18,7 +18,11 @@ def get_am_deepseek_distill():
 
 
 def get_big_math():
-    get_huggingface_data("SynthLabsAI/Big-Math-RL-Verified", ["*.parquet"]) # ~32MB
+    get_huggingface_data("SynthLabsAI/Big-Math-RL-Verified", ["*.parquet"]) # ~30MB
+
+
+def get_limo():
+    get_huggingface_data("GAIR/LIMO", ["*.jsonl"]) # ~20MB
 
 
 def get_llama_nemotron():
@@ -31,8 +35,7 @@ def get_megamath_web_pro():
 
 
 def get_numinamath_1_5():
-    # get_huggingface_data("AI-MO/NuminaMath-1.5", ["data/*.parquet"]) # ~600MB
-    get_huggingface_data("AI-MO/NuminaMath-1.5", ["data/train-00000-of-00003.parquet"]) # ~200MB
+    get_huggingface_data("AI-MO/NuminaMath-1.5", ["data/*.parquet"]) # ~600MB
 
 
 def get_open_r1_math():
@@ -45,14 +48,25 @@ def get_open_thoughts_2():
     get_huggingface_data("open-thoughts/OpenThoughts2-1M", ["data/train-00000-of-00038.parquet"]) # ~200MB
 
 
+def get_pensez():
+    get_huggingface_data("HoangHa/Pensez-v0.1", ["*.parquet"]) # ~20MB
+
+
+def get_s1k_1_1():
+    get_huggingface_data("simplescaling/s1K-1.1", ["data/*.parquet"]) # ~20MB
+
+
 def main():
     get_am_deepseek_distill()
     get_big_math()
+    get_limo()
     get_llama_nemotron()
     get_megamath_web_pro()
     get_numinamath_1_5()
     get_open_r1_math()
     get_open_thoughts_2()
+    get_pensez()
+    get_s1k_1_1()
 
 
 if __name__ == "__main__":
