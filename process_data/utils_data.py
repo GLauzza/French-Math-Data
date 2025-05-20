@@ -6,9 +6,33 @@ import matplotlib.pyplot as plt
 
 import config
 
-def load_data(name):
-    dataset = load_dataset(config.DATA_PATH+"/"+name, split="train")
+
+def load_data(name, data_files=None, split="train"):
+    try:
+        dataset = load_dataset(config.DATA_PATHS[0]+name, split=split, data_files=data_files)
+    except FileNotFoundError:
+        dataset = load_dataset(config.DATA_PATHS[1]+name, split=split, data_files=data_files)
     return dataset
+
+
+def extract_boxed_text(column):
+    outputs = []
+    for x in column:
+        last_boxed = x.split("\\boxed{")[-1]
+        n_left = 1
+        n_right = 0
+        output = ""
+        for char in last_boxed:
+            if char == "}":
+                n_right += 1
+            elif char == "{":
+                n_left += 1
+            if n_left == n_right:
+                break
+            output += char
+        outputs.append(output)
+    return outputs
+
 
 def print_distribution(column, column_name):
     filtered = [x for x in column if x is not None]
@@ -53,6 +77,7 @@ def print_distribution(column, column_name):
     plt.title(column_name + " distribution")
     plt.show()
 
+
 def print_distributions(dataset, column_names):
     print("Features:", list(dataset.features.keys()))
     print("Number of samples:", dataset.num_rows)
@@ -60,6 +85,7 @@ def print_distributions(dataset, column_names):
 
     for column_name in column_names:
         print_distribution(dataset[column_name], column_name) 
+
 
 def flatten_features(dataset, column_names):
     flat_dataset = Dataset.from_dict({k:[] for k in dataset.features.keys()})
@@ -73,3 +99,18 @@ def flatten_features(dataset, column_names):
                     flat_sample[k] = v
             flat_dataset = flat_dataset.add_item(flat_sample)
     return flat_dataset
+
+
+def fusion_datasets(datasets):
+    features = set(datasets[0].keys()) - set(["name", "dataset"])
+    fused_dataset = {}
+    for feature in features:
+        fused_dataset[feature] = []
+
+    for dataset in datasets:
+        print(f"Processing dataset: {dataset['name']}")
+        print(print_distributions(dataset["dataset"],[]))
+        for feature in features:
+            fused_dataset[feature].extend(dataset[feature])
+
+    return Dataset.from_dict(fused_dataset)

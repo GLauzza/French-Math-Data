@@ -45,6 +45,16 @@ def filter_limo(dataset):
     return dataset
 
 
+def filter_limr(dataset):
+    n_samples = dataset.num_rows
+    # Question too short/long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["prompt"], 5, 384))
+    # Answer too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 32))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    return dataset
+
+
 def filter_llama_nemotron(dataset):
     n_samples = dataset.num_rows
     # Question too short/long
@@ -53,6 +63,18 @@ def filter_llama_nemotron(dataset):
     dataset = dataset.filter(lambda x: filter_n_tokens(x["output"], 0, 16384))
     # Answer too long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 50))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    return dataset
+
+
+def filter_math_lvl5_fr_train(dataset):
+    n_samples = dataset.num_rows
+    # Question too short/long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["problem"], 5, 512))
+    # Solution too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 2048))
+    # Answer too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 30))
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 

@@ -12,3 +12,5 @@
 - [ ] put hyperparams of filters in config
 - [ ] keep categories features of some datasets
 - [ ] handle openr1 finish reason, s1 cot type, numina/openr1 question type filtering
+- [ ] check extraction of boxed works perfectly
+- [ ] evaluate if answer length / question lenght / CoT length is correlated with accuracy
