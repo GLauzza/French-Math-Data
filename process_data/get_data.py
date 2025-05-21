@@ -52,6 +52,10 @@ def get_megamath_web_pro():
     get_huggingface_data("LLM360/MegaMath", ["megamath-web-pro/000_00000.parquet"]) # ~600MB
 
 
+def get_metamath_qa():
+    get_huggingface_data("meta-math/MetaMathQA", ["*.json"]) # ~400MB
+
+
 def get_mgsm():
     os.system("mkdir " + config.DATA_PATHS[1] + "/MGSM")
     os.system("wget https://raw.githubusercontent.com/google-research/url-nlp/refs/heads/main/mgsm/mgsm_fr.tsv -O ./Data/MGSM/mgsm_fr.tsv") # ~60KB
@@ -101,6 +105,7 @@ def main():
     get_math_lvl5_fr()
     get_mclm() 
     # get_megamath_web_pro()
+    get_metamath_qa()
     get_mgsm() 
     get_msvamp()
     get_numinamath_1_5()

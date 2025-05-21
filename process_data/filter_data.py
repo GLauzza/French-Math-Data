@@ -79,6 +79,18 @@ def filter_math_lvl5_fr_train(dataset):
     return dataset
 
 
+def filter_metamath_qa(dataset):
+    n_samples = dataset.num_rows
+    # Question too short/long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["query"], 5, 256))
+    # Solution too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["response"], 0, 1024))
+    # Answer too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 50))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    return dataset
+
+
 def filter_numinamath_1_5(dataset):
     n_samples = dataset.num_rows
     # Question too short/long
@@ -129,7 +141,7 @@ def filter_s1k_1_1(dataset):
     # Solution too long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["deepseek_thinking_trajectory"], 0, 17500))
     # Answer too long
-    dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 1000))
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 1024))
     # Invalid solution
     dataset = dataset.filter(lambda x: x["deepseek_grade"] == "Yes")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")

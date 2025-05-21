@@ -55,6 +55,13 @@ megamath_web_pro = megamath_web_pro.add_column(
     [(datetime.strptime(ts, '%Y-%m-%dT%H:%M:%SZ') - datetime(1970, 1, 1)).total_seconds() for ts in megamath_web_pro["timestamp"]]
 )
 
+metamath_qa = load_data("MetaMathQA").select(range(10000))
+metamath_qa = metamath_qa.add_column(
+    "answer",
+    [x.split("The answer is: ")[-1] for x in metamath_qa["response"]],
+)
+metamath_qa = filter_metamath_qa(metamath_qa)
+
 numinamath_1_5 = load_data("NuminaMath-1.5").select(range(10000))
 numinamath_1_5 = filter_numinamath_1_5(numinamath_1_5)
 
@@ -118,8 +125,26 @@ cot_datasets = [
         "question": [x[0]["content"] for x in llama_nemotron["input"]],
         "answer": llama_nemotron["answer"],
         "solution": llama_nemotron["output"],
-        "source": ["AoPS"] * len(llama_nemotron),
+        "source": ["llama-nemotron/AoPS"] * len(llama_nemotron),
         "model": llama_nemotron["generator"],
+    },
+    {
+        "name": "math-lvl5-fr",
+        "dataset": math_lvl5_fr_train,
+        "question": math_lvl5_fr_train["problem"],
+        "answer": math_lvl5_fr_train["answer"],
+        "solution": math_lvl5_fr_train["solution"],
+        "source": ["math-lvl5-fr/math"] * len(math_lvl5_fr_train),
+        "model": [None] * len(math_lvl5_fr_train),
+    },
+    {
+        "name": "metamath-qa",
+        "dataset": metamath_qa,
+        "question": metamath_qa["query"],
+        "answer": metamath_qa["answer"],
+        "solution": metamath_qa["response"],
+        "source": ["metamath-qa/" + subset for subset in metamath_qa["type"]],
+        "model": ["unknown"] * len(metamath_qa),
     },
     {
         "name": "numinamath-1.5",
@@ -159,6 +184,7 @@ cot_datasets = [
     },
 ]
 cot_dataset = fusion_datasets(cot_datasets)
+cot_dataset.save_to_disk(config.DATA_PATHS[1] + "Fused-CoT")
 
 eval_datasets = [
     {
@@ -197,5 +223,5 @@ eval_datasets = [
         "source": ["polymath/" + (identifier).split("-")[0] for identifier in polymath["id"]],
     }
 ]
-
 eval_dataset = fusion_datasets(eval_datasets)
+eval_dataset.save_to_disk(config.DATA_PATHS[1] + "Eval-Math-FR")
