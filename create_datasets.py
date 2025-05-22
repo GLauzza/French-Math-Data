@@ -24,13 +24,22 @@ limr = load_data("LIMR")
 limr = filter_limr(limr)
 
 llama_nemotron = load_data("Llama-Nemotron-Post-Training-Dataset").select(range(10000))
-llama_nemotron = llama_nemotron.add_column("answer", extract_boxed_text(llama_nemotron["output"]))
+llama_nemotron = llama_nemotron.add_column(
+    "answer",
+    [extract_boxed_text(x) for x in llama_nemotron["output"]]
+)
 llama_nemotron = filter_llama_nemotron(llama_nemotron)
 
 math_lvl5_fr_train = load_data("MATH_LVL5_fr")
 math_lvl5_fr_test = load_data("MATH_LVL5_fr", split="test")
-math_lvl5_fr_train = math_lvl5_fr_train.add_column("answer", extract_boxed_text(math_lvl5_fr_train["solution"]))
-math_lvl5_fr_test = math_lvl5_fr_test.add_column("answer", extract_boxed_text(math_lvl5_fr_test["solution"]))
+math_lvl5_fr_train = math_lvl5_fr_train.add_column(
+    "answer",
+    [extract_boxed_text(x) for x in math_lvl5_fr_train["output"]]
+)
+math_lvl5_fr_test = math_lvl5_fr_test.add_column(
+    "answer",
+    [extract_boxed_text(x) for x in math_lvl5_fr_test["output"]]
+)
 math_lvl5_fr_train = filter_math_lvl5_fr_train(math_lvl5_fr_train)
 
 mclm = {"question": [], "answer": [], "source": [],}

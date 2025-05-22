@@ -15,23 +15,20 @@ def load_data(name, data_files=None, split="train"):
     return dataset
 
 
-def extract_boxed_text(column):
-    outputs = []
-    for x in column:
-        last_boxed = x.split("\\boxed{")[-1]
-        n_left = 1
-        n_right = 0
-        output = ""
-        for char in last_boxed:
-            if char == "}":
-                n_right += 1
-            elif char == "{":
-                n_left += 1
-            if n_left == n_right:
-                break
-            output += char
-        outputs.append(output)
-    return outputs
+def extract_boxed_text(x):
+    last_boxed = x.split("\\boxed{")[-1]
+    n_left = 1
+    n_right = 0
+    output = ""
+    for char in last_boxed:
+        if char == "}":
+            n_right += 1
+        elif char == "{":
+            n_left += 1
+        if n_left == n_right:
+            break
+        output += char
+    return output
 
 
 def print_distribution(column, column_name):

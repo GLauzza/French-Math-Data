@@ -1,0 +1,17 @@
+name: math
+channels:
+  - pytorch
+  - defaults
+  - conda-forge
+  - nvidia
+dependencies:
+  - python>=3.10
+  - numpy
+  - pandas
+  - matplotlib
+  - datasets
+  - transformers
+  - huggingface_hub
+  - pip:
+    - torch
+    - math-verify
