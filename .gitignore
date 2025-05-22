@@ -1,5 +1,6 @@
 # Data
 Data/
+Models/
 
 # Cache
 __pycache__/
