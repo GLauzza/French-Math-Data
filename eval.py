@@ -22,7 +22,7 @@ def load_model(model_path):
     return tokenizer, model
 
 
-def to_chat_template(x):
+def to_chat_template_qwen_2_5(x):
     chat = (
         "<|im_start|>system\nPlease reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n"
         "<|im_start|>user\n" + x + "<|im_end|>\n"
@@ -30,12 +30,20 @@ def to_chat_template(x):
     )
     return chat
 
+def to_chat_template_qwen_3(x):
+    chat = (
+        "<|im_start|>system\nPlease reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n"
+        "<|im_start|>user\n" + x + "/think<|im_end|>\n"
+        "<|im_start|>assistant\n"
+    )
+    return chat
 
-def eval_model(model, tokenizer, batch_size=32, max_new_tokens=1000, eval_dataset="Eval-Math-FR"):
+
+def eval_model(model, tokenizer, chat_template_fun, batch_size=32, max_new_tokens=1000, eval_dataset="Eval-Math-FR"):
     dataset = datasets.load_from_disk(config.DATA_PATHS[1]+eval_dataset)
     dataset = dataset.add_column(
         "chat_input",
-        [to_chat_template(x) for x in dataset["question"]]
+        [chat_template_fun(x) for x in dataset["question"]]
     )
     dataset = dataset.add_column(
         "input_length",
@@ -83,7 +91,6 @@ def eval_model(model, tokenizer, batch_size=32, max_new_tokens=1000, eval_datase
                     "answer": (answer, str(parsed_answer)),
                     "output": (pred, str(parsed_pred)),
                 })
-            break
     for source in sources:
         n_source = len(dataset.filter(lambda x: x["source"] == source))
         accuracies[source] = accuracies[source] / n_source
@@ -91,11 +98,11 @@ def eval_model(model, tokenizer, batch_size=32, max_new_tokens=1000, eval_datase
     return accuracies, cot_lengths, samples
 
 
-def eval_models():
+def eval_models(models_to_evaluate):
     output = {}
-    for model_path in config.models_to_evaluate:
+    for model_path, chat_template_fun in models_to_evaluate:
         tokenizer, model = load_model(model_path)
-        accuracies, cot_lengths, samples = eval_model(model, tokenizer)
+        accuracies, cot_lengths, samples = eval_model(model, tokenizer, chat_template_fun)
         output[model_path] = {
             "accuracies": accuracies,
             "cot_lengths": cot_lengths,
@@ -106,4 +113,17 @@ def eval_models():
 
 
 if __name__ == "__main__":
-    eval_models()
+    models_to_evaluate = [
+        ("Qwen/Qwen2.5-Math-7B-Instruct", to_chat_template_qwen_2_5),
+        ("Qwen/Qwen3-8B", to_chat_template_qwen_3),
+        # TODO: create chat template for every evaluated model
+        # ("OpenLLM-France/Lucie-7B-Instruct-v1.1", to_chat_template_qwen_2_5),
+        # ("microsoft/Phi-4-mini-reasoning", to_chat_template_qwen_2_5),
+        # ("deepseek-ai/deepseek-math-7b-instruct", to_chat_template_qwen_2_5),
+        # ("deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", to_chat_template_qwen_2_5),
+        # ("deepseek-ai/DeepSeek-R1-Distill-Llama-8B", to_chat_template_qwen_2_5),
+        # ("open-r1/OpenR1-Distill-7B", to_chat_template_qwen_2_5),
+        # ("HoangHa/Pensez-v0.1-e5", to_chat_template_qwen_2_5),
+        # ("meta-llama/Llama-3.1-8B-Instruct", to_chat_template_qwen_2_5),
+    ]
+    eval_models(models_to_evaluate)
