@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 import config
 
 
-def load_data(name, data_files=None, split="train"):
+def load_data(path, data_files=None, split="train"):
     try:
-        dataset = load_dataset(config.DATA_PATHS[0]+name, split=split, data_files=data_files)
+        dataset = load_dataset(config.DATA_PATHS[0]+path, split=split, data_files=data_files)
     except FileNotFoundError:
-        dataset = load_dataset(config.DATA_PATHS[1]+name, split=split, data_files=data_files)
+        dataset = load_dataset(config.DATA_PATHS[1]+(path.split("/")[-1]), split=split, data_files=data_files)
     return dataset
 
 

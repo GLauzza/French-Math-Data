@@ -1,3 +1,5 @@
+import json
+
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import datasets
@@ -7,7 +9,6 @@ import config
 from process_data.utils_data import *
 
 
-models_to_evaluate = ["Qwen2.5-Math-1.5B-Instruct"]
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
@@ -16,8 +17,8 @@ def load_model(model_path):
         tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[0]+model_path, padding_side='left')
         model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_map=device)
     except:
-        tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[1]+model_path, padding_side='left')
-        model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+model_path, device_map=device)
+        tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), padding_side='left')
+        model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_map=device)
     return tokenizer, model
 
 
@@ -30,33 +31,79 @@ def to_chat_template(x):
     return chat
 
 
-def eval_model(model, tokenizer, batch_size=1, max_new_tokens=5000, eval_dataset="Eval-Math-FR"):
+def eval_model(model, tokenizer, batch_size=32, max_new_tokens=1000, eval_dataset="Eval-Math-FR"):
     dataset = datasets.load_from_disk(config.DATA_PATHS[1]+eval_dataset)
     dataset = dataset.add_column(
         "chat_input",
         [to_chat_template(x) for x in dataset["question"]]
     )
+    dataset = dataset.add_column(
+        "input_length",
+        [len(x) for x in dataset["question"]]
+    )
+    dataset = dataset.sort("input_length")
+
+    # Ideal batch size is 32/64
+    # for bs in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
+    #     with_pad = 0
+    #     without_pad = 0
+    #     for i in range(0, len(dataset), bs):
+    #         if i + bs > len(dataset):
+    #             bs = len(dataset) - i
+    #         with_pad += bs*dataset["input_length"][i+bs-1]
+    #         without_pad += sum(dataset["input_length"][i:i+bs])
+    #     print(f"Batch size: {bs}, With padding: {with_pad}, Without padding: {without_pad}, Padding ratio: {without_pad/with_pad}")
+
+    sources = set(dataset["source"])
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
-    accuracy, cot_length = 0, 0
+    accuracies, cot_lengths, samples = {}, {}, {}
+    for source in sources:
+        accuracies[source] = 0
+        cot_lengths[source] = 0
+        samples[source] = []
     model.eval()
     with torch.no_grad():
         for x in dataloader:
             tokens = tokenizer(x["chat_input"], return_tensors='pt', padding=True).to(device)
-            output_ids = model.generate(**tokens, max_new_tokens=max_new_tokens, do_sample=False, temperature=0).cpu()
+            output_ids = model.generate(**tokens, max_new_tokens=max_new_tokens, top_k=1).cpu()
             output_texts = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
-            for output_id, output_text, answer in zip(output_ids, output_texts, x["answer"]):
-                accuracy += verify(parse(answer), parse(extract_boxed_text(output_text)))
-                cot_length += sum(output_id.view(-1) != tokenizer.pad_token_id)
-            print("output", output_text)
+            for input_id, output_id, output_text, answer, source in zip(tokens["input_ids"], output_ids, output_texts, x["answer"], x["source"]):
+                pred = "$" + extract_boxed_text(output_text) + "$"
+                answer = "$" + answer + "$"
+                parsed_pred = parse(pred)
+                parsed_answer = parse(answer)
+                is_valid = verify(parsed_answer, parsed_pred)
+                cot_length = len(output_id) - len(input_id)
+                accuracies[source] += is_valid
+                cot_lengths[source] += cot_length
+                samples[source].append({
+                    "generation": output_text,
+                    "cot_length": cot_length,
+                    "is_valid": is_valid,
+                    "answer": (answer, str(parsed_answer)),
+                    "output": (pred, str(parsed_pred)),
+                })
             break
-        accuracy = accuracy / len(dataloader)
-        cot_length = cot_length / len(dataloader)
-    return accuracy, cot_length
+    for source in sources:
+        n_source = len(dataset.filter(lambda x: x["source"] == source))
+        accuracies[source] = accuracies[source] / n_source
+        cot_lengths[source] = cot_lengths[source] / n_source
+    return accuracies, cot_lengths, samples
+
+
+def eval_models():
+    output = {}
+    for model_path in config.models_to_evaluate:
+        tokenizer, model = load_model(model_path)
+        accuracies, cot_lengths, samples = eval_model(model, tokenizer)
+        output[model_path] = {
+            "accuracies": accuracies,
+            "cot_lengths": cot_lengths,
+            "samples": samples,
+        }
+        with open("eval.json", "w") as f:
+            json.dump(output, f)
 
 
 if __name__ == "__main__":
-    for model_path in models_to_evaluate:
-        tokenizer, model = load_model(model_path)
-        accuracy, cot_length = eval_model(model, tokenizer)
-        print("accuracy", accuracy)
-        print("cot_length", cot_length)
+    eval_models()

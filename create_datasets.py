@@ -11,40 +11,40 @@ from process_data.filter_data import *
 
 
 # LOAD AND FILTER DATASETS ----------------------------------------------------------------------
-am_deepseek_distill = load_data("AM-DeepSeek-Distilled-40M").select(range(10000))
+am_deepseek_distill = load_data("a-m-team/AM-DeepSeek-Distilled-40M", data_files="math_r1_*.jsonl").select(range(10000))
 am_deepseek_distill = filter_am_deepseek_distill(am_deepseek_distill)
 
-big_math = load_data("Big-Math-RL-Verified").select(range(10000))
+big_math = load_data("SynthLabsAI/Big-Math-RL-Verified").select(range(10000))
 big_math = filter_big_math(big_math)
 
-limo = load_data("LIMO")
+limo = load_data("GAIR/LIMO")
 limo = filter_limo(limo)
 
-limr = load_data("LIMR")
+limr = load_data("GAIR/LIMR")
 limr = filter_limr(limr)
 
-llama_nemotron = load_data("Llama-Nemotron-Post-Training-Dataset").select(range(10000))
+llama_nemotron = load_data("nvidia/Llama-Nemotron-Post-Training-Dataset", data_files="SFT/math/math_v1.1.jsonl").select(range(10000))
 llama_nemotron = llama_nemotron.add_column(
     "answer",
     [extract_boxed_text(x) for x in llama_nemotron["output"]]
 )
 llama_nemotron = filter_llama_nemotron(llama_nemotron)
 
-math_lvl5_fr_train = load_data("MATH_LVL5_fr")
-math_lvl5_fr_test = load_data("MATH_LVL5_fr", split="test")
+math_lvl5_fr_train = load_data("le-leadboard/MATH_LVL5_fr")
+math_lvl5_fr_test = load_data("le-leadboard/MATH_LVL5_fr", split="test")
 math_lvl5_fr_train = math_lvl5_fr_train.add_column(
     "answer",
-    [extract_boxed_text(x) for x in math_lvl5_fr_train["output"]]
+    [extract_boxed_text(x) for x in math_lvl5_fr_train["solution"]]
 )
 math_lvl5_fr_test = math_lvl5_fr_test.add_column(
     "answer",
-    [extract_boxed_text(x) for x in math_lvl5_fr_test["output"]]
+    [extract_boxed_text(x) for x in math_lvl5_fr_test["solution"]]
 )
 math_lvl5_fr_train = filter_math_lvl5_fr_train(math_lvl5_fr_train)
 
 mclm = {"question": [], "answer": [], "source": [],}
 for subset in ["m-imo", "mt-aime2024", "mt-math100"]:
-    mclm_subset = load_data("MCLM", data_files=subset+".parquet")
+    mclm_subset = load_data("amphora/MCLM", data_files=subset+".parquet")
     mclm_subset = mclm_subset.remove_columns(set(mclm_subset.features.keys()) - set(["fr", "answer"]))
     mclm_subset = mclm_subset.cast_column("answer", Value(dtype="string"))
     mclm["question"].extend(mclm_subset["fr"])
@@ -52,43 +52,43 @@ for subset in ["m-imo", "mt-aime2024", "mt-math100"]:
     mclm["source"].extend([subset] * len(mclm_subset["fr"]))
 mclm = Dataset.from_dict(mclm)
 
-mgsm = Dataset.from_pandas(pd.read_csv(
-    config.DATA_PATHS[1]+"MGSM/mgsm_fr.tsv", sep="\t", header=None, names=["question", "answer"]
-))
+# megamath_web_pro = load_data("LLM360/MegaMath"), data_files="megamath-web-pro/*.parquet".select(range(10000))
+# megamath_web_pro = megamath_web_pro.add_column(
+#     "timestamp_unformatted",
+#     [(datetime.strptime(ts, '%Y-%m-%dT%H:%M:%SZ') - datetime(1970, 1, 1)).total_seconds() for ts in megamath_web_pro["timestamp"]]
+# )
 
-msvamp = load_data("MSVAMP", split="test")
-
-megamath_web_pro = load_data("MegaMath").select(range(10000))
-megamath_web_pro = megamath_web_pro.add_column(
-    "timestamp_unformatted",
-    [(datetime.strptime(ts, '%Y-%m-%dT%H:%M:%SZ') - datetime(1970, 1, 1)).total_seconds() for ts in megamath_web_pro["timestamp"]]
-)
-
-metamath_qa = load_data("MetaMathQA").select(range(10000))
+metamath_qa = load_data("meta-math/MetaMathQA").select(range(10000))
 metamath_qa = metamath_qa.add_column(
     "answer",
     [x.split("The answer is: ")[-1] for x in metamath_qa["response"]],
 )
 metamath_qa = filter_metamath_qa(metamath_qa)
 
-numinamath_1_5 = load_data("NuminaMath-1.5").select(range(10000))
+mgsm = Dataset.from_pandas(pd.read_csv(
+    config.DATA_PATHS[1]+"MGSM/mgsm_fr.tsv", sep="\t", header=None, names=["question", "answer"]
+))
+
+msvamp = load_data("Mathoctopus/MSVAMP", split="test")
+
+numinamath_1_5 = load_data("AI-MO/NuminaMath-1.5").select(range(10000))
 numinamath_1_5 = filter_numinamath_1_5(numinamath_1_5)
 
-open_r1_math = load_data("OpenR1-Math-220k").select(range(1000))
+open_r1_math = load_data("open-r1/OpenR1-Math-220k").select(range(1000))
 open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons'])
 open_r1_math = filter_open_r1_math(open_r1_math)
 
-open_thoughts_2 = load_data("OpenThoughts2-1M").select(range(10000))
+open_thoughts_2 = load_data("open-thoughts/OpenThoughts2-1M", data_files="data/*.parquet").select(range(10000))
 open_thoughts_2 = filter_open_thoughts_2(open_thoughts_2)
 
 #TODO: PENSEZ
 
-polymath = load_data("PolyMath")
+polymath = load_data("Qwen/PolyMath")
 
-s1k_1_1 = load_data("s1K-1.1")
+s1k_1_1 = load_data("simplescaling/s1K-1.1")
 s1k_1_1 = filter_s1k_1_1(s1k_1_1)
 
-swallowmath = load_data("swallow-math").select(range(10000))
+# swallowmath = load_data("tokyotech-llm/swallow-math").select(range(10000))
 
 # FUSION OF DATASETS ----------------------------------------------------------------------
 cot_datasets = [
@@ -193,7 +193,7 @@ cot_datasets = [
     },
 ]
 cot_dataset = fusion_datasets(cot_datasets)
-cot_dataset.save_to_disk(config.DATA_PATHS[1] + "Fused-CoT")
+# cot_dataset.save_to_disk(config.DATA_PATHS[1] + "Fused-CoT")
 
 eval_datasets = [
     {

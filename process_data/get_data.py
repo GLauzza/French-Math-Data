@@ -19,8 +19,8 @@ def get_huggingface_data(repo_id, allow_patterns):
 
 
 def get_am_deepseek_distill():
-    # get_huggingface_data("a-m-team/AM-DeepSeek-Distilled-40M", ["math_r1_*.jsonl"]) # ~40GB
-    get_huggingface_data("a-m-team/AM-DeepSeek-Distilled-40M", ["math_r1_1pass.jsonl"]) # ~10GB
+    get_huggingface_data("a-m-team/AM-DeepSeek-Distilled-40M", ["math_r1_*.jsonl"]) # ~40GB
+    # get_huggingface_data("a-m-team/AM-DeepSeek-Distilled-40M", ["math_r1_1pass.jsonl"]) # ~10GB
 
 
 def get_big_math():
@@ -48,8 +48,8 @@ def get_mclm():
 
 
 def get_megamath_web_pro():
-    # get_huggingface_data("LLM360/MegaMath", ["megamath-web-pro/*.parquet"]) # ~50GB
-    get_huggingface_data("LLM360/MegaMath", ["megamath-web-pro/000_00000.parquet"]) # ~600MB
+    get_huggingface_data("LLM360/MegaMath", ["megamath-web-pro/*.parquet"]) # ~50GB
+    # get_huggingface_data("LLM360/MegaMath", ["megamath-web-pro/000_00000.parquet"]) # ~600MB
 
 
 def get_metamath_qa():
@@ -57,8 +57,8 @@ def get_metamath_qa():
 
 
 def get_mgsm():
-    os.system("mkdir " + config.DATA_PATHS[1] + "/MGSM")
-    os.system("wget https://raw.githubusercontent.com/google-research/url-nlp/refs/heads/main/mgsm/mgsm_fr.tsv -O ./Data/MGSM/mgsm_fr.tsv") # ~60KB
+    os.system("mkdir " + config.DATA_PATHS[1] + "MGSM")
+    os.system("wget https://raw.githubusercontent.com/google-research/url-nlp/refs/heads/main/mgsm/mgsm_fr.tsv -O " + config.DATA_PATHS[1] + "MGSM/mgsm_fr.tsv") # ~60KB
 
 
 def get_msvamp():
@@ -70,13 +70,13 @@ def get_numinamath_1_5():
 
 
 def get_open_r1_math():
-    # get_huggingface_data("open-r1/OpenR1-Math-220k", ["*.parquet"]) # ~8GB
-    get_huggingface_data("open-r1/OpenR1-Math-220k", ["data/train-00000-of-00010.parquet"]) # ~200MB
+    get_huggingface_data("open-r1/OpenR1-Math-220k", ["all/*.parquet"]) # ~8GB
+    # get_huggingface_data("open-r1/OpenR1-Math-220k", ["all/train-00000-of-00020.parquet"]) # ~200MB
 
 
 def get_open_thoughts_2():
-    # get_huggingface_data("open-thoughts/OpenThoughts2-1M", ["data/*.parquet"]) # ~8GB
-    get_huggingface_data("open-thoughts/OpenThoughts2-1M", ["data/train-00000-of-00038.parquet"]) # ~200MB
+    get_huggingface_data("open-thoughts/OpenThoughts2-1M", ["data/*.parquet"]) # ~8GB
+    # get_huggingface_data("open-thoughts/OpenThoughts2-1M", ["data/train-00000-of-00038.parquet"]) # ~200MB
 
 
 def get_pensez():
@@ -92,8 +92,8 @@ def get_s1k_1_1():
 
 
 def get_swallowmath():
-    # get_huggingface_data("tokyotech-llm/swallow-math", ["*.jsonl"]) # ~13GB
-    get_huggingface_data("tokyotech-llm/swallow-math", ["train-00002-of-00002.jsonl"]) # ~3GB
+    get_huggingface_data("tokyotech-llm/swallow-math", ["*.jsonl"]) # ~13GB
+    # get_huggingface_data("tokyotech-llm/swallow-math", ["train-00002-of-00002.jsonl"]) # ~3GB
 
 
 def main():

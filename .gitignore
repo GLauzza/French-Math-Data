@@ -4,3 +4,6 @@ Models/
 
 # Cache
 __pycache__/
+
+# Evaluation
+eval.json

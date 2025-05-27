@@ -1,9 +1,6 @@
 name: math
 channels:
-  - pytorch
-  - defaults
   - conda-forge
-  - nvidia
 dependencies:
   - python>=3.10
   - numpy
@@ -12,6 +9,7 @@ dependencies:
   - datasets
   - transformers
   - huggingface_hub
+  - accelerate
   - pip:
     - torch
     - math-verify
