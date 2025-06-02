@@ -1,5 +1,18 @@
 # French-Math-Data
 
+### Instructions
+You can configure your environnement by calling ```conda env create -f math.yml; conda activate vllmath```
+
+You can choose where your models and datasets will be located in ```config.py```. There is 2 locations for each, allowing to have first Jean Zay DSDIR and second a custom location.
+
+You can download the math datasets by calling ```python ./process_data/get_data.py```.
+
+Once all the datasets are downloaded you can create the CoT and Eval datasets by calling ```python ./create_datasets.py```
+
+To evaluate your models, edit the ```eval.py``` to add the model you want to evaluate along with their chat template function. This will generate an ```eval.json``` file containing the results of the evaluation.
+
+You can explore those results using the ```plot_eval.ipynb``` notebook.
+
 ### TODOs
 
 

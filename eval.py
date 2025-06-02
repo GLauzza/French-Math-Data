@@ -4,22 +4,27 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import datasets
 from math_verify import parse, verify
+from vllm import LLM, SamplingParams
 
 import config
 from process_data.utils_data import *
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
+print("Device:", device)
 
 
 def load_model(model_path):
     try:
-        tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[0]+model_path, padding_side='left')
-        model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_map=device)
+        # tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[0]+model_path, padding_side='left')
+        # model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_map=device)
+        model = LLM(config.MODEL_PATHS[0]+model_path)
     except:
-        tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), padding_side='left')
-        model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_map=device)
-    return tokenizer, model
+        # tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), padding_side='left')
+        # model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_map=device)
+        model = LLM(config.MODEL_PATHS[1]+(model_path.split("/")[-1]))
+    # return model, tokenizer
+    return model, None
 
 
 def to_chat_template_qwen_2_5(x):
@@ -39,7 +44,7 @@ def to_chat_template_qwen_3(x):
     return chat
 
 
-def eval_model(model, tokenizer, chat_template_fun, batch_size=32, max_new_tokens=1000, eval_dataset="Eval-Math-FR"):
+def eval_model(model, tokenizer, chat_template_fun, batch_size=32, max_new_tokens=10000, eval_dataset="Eval-Math-FR"):
     dataset = datasets.load_from_disk(config.DATA_PATHS[1]+eval_dataset)
     dataset = dataset.add_column(
         "chat_input",
@@ -69,28 +74,27 @@ def eval_model(model, tokenizer, chat_template_fun, batch_size=32, max_new_token
         accuracies[source] = 0
         cot_lengths[source] = 0
         samples[source] = []
-    model.eval()
-    with torch.no_grad():
-        for x in dataloader:
-            tokens = tokenizer(x["chat_input"], return_tensors='pt', padding=True).to(device)
-            output_ids = model.generate(**tokens, max_new_tokens=max_new_tokens, top_k=1).cpu()
-            output_texts = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
-            for input_id, output_id, output_text, answer, source in zip(tokens["input_ids"], output_ids, output_texts, x["answer"], x["source"]):
-                pred = "$" + extract_boxed_text(output_text) + "$"
-                answer = "$" + answer + "$"
-                parsed_pred = parse(pred)
-                parsed_answer = parse(answer)
-                is_valid = verify(parsed_answer, parsed_pred)
-                cot_length = len(output_id) - len(input_id)
-                accuracies[source] += is_valid
-                cot_lengths[source] += cot_length
-                samples[source].append({
-                    "generation": output_text,
-                    "cot_length": cot_length,
-                    "is_valid": is_valid,
-                    "answer": (answer, str(parsed_answer)),
-                    "output": (pred, str(parsed_pred)),
-                })
+    for x in dataloader:
+        request_outputs = model.generate(x["chat_input"], SamplingParams(temperature=0.0, max_tokens=max_new_tokens))
+        input_ids = [request_output.prompt_token_ids for request_output in request_outputs]
+        output_ids = [request_output.outputs[0].token_ids for request_output in request_outputs]
+        output_texts = [request_output.outputs[0].text for request_output in request_outputs]
+        for input_id, output_id, output_text, answer, source in zip(input_ids, output_ids, output_texts, x["answer"], x["source"]):
+            pred = "$" + extract_boxed_text(output_text) + "$"
+            answer = "$" + answer + "$"
+            parsed_pred = parse(pred)
+            parsed_answer = parse(answer)
+            is_valid = verify(parsed_answer, parsed_pred)
+            cot_length = len(output_id) - len(input_id)
+            accuracies[source] += is_valid
+            cot_lengths[source] += cot_length
+            samples[source].append({
+                "generation": output_text,
+                "cot_length": cot_length,
+                "is_valid": is_valid,
+                "answer": (answer, str(parsed_answer)),
+                "output": (pred, str(parsed_pred)),
+            })
     for source in sources:
         n_source = len(dataset.filter(lambda x: x["source"] == source))
         accuracies[source] = accuracies[source] / n_source
@@ -101,21 +105,23 @@ def eval_model(model, tokenizer, chat_template_fun, batch_size=32, max_new_token
 def eval_models(models_to_evaluate):
     output = {}
     for model_path, chat_template_fun in models_to_evaluate:
-        tokenizer, model = load_model(model_path)
+        model, tokenizer     = load_model(model_path)
         accuracies, cot_lengths, samples = eval_model(model, tokenizer, chat_template_fun)
         output[model_path] = {
             "accuracies": accuracies,
             "cot_lengths": cot_lengths,
             "samples": samples,
         }
+        print("Output:", output)
         with open("eval.json", "w") as f:
             json.dump(output, f)
+            print("dumped")
 
 
 if __name__ == "__main__":
     models_to_evaluate = [
         ("Qwen/Qwen2.5-Math-7B-Instruct", to_chat_template_qwen_2_5),
-        ("Qwen/Qwen3-8B", to_chat_template_qwen_3),
+        # ("Qwen/Qwen3-8B", to_chat_template_qwen_3),
         # TODO: create chat template for every evaluated model
         # ("OpenLLM-France/Lucie-7B-Instruct-v1.1", to_chat_template_qwen_2_5),
         # ("microsoft/Phi-4-mini-reasoning", to_chat_template_qwen_2_5),

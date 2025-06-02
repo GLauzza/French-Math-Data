@@ -1,8 +1,8 @@
-name: math
+name: vllmath
 channels:
   - conda-forge
 dependencies:
-  - python>=3.10
+  - python==3.12.10 
   - numpy
   - pandas
   - matplotlib
@@ -10,6 +10,9 @@ dependencies:
   - transformers
   - huggingface_hub
   - accelerate
+  - pip
   - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu128
     - torch
+    - vllm
     - math-verify
