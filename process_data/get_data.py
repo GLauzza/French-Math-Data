@@ -1,11 +1,10 @@
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-
 from huggingface_hub import snapshot_download
 from datasets import load_dataset
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import config
 
 

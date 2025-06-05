@@ -1,22 +1,36 @@
 import json
+import sys
+import os
 
-from datasets import load_dataset, Dataset
+from datasets import load_dataset, Dataset, load_from_disk
 import numpy as np
 import matplotlib.pyplot as plt
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import config
 
 
 def load_data(path, data_files=None, split="train"):
+    print("FM - Loading Dataset:", path)
     try:
-        dataset = load_dataset(config.DATA_PATHS[0]+path, split=split, data_files=data_files)
-    except FileNotFoundError:
-        dataset = load_dataset(config.DATA_PATHS[1]+(path.split("/")[-1]), split=split, data_files=data_files)
+        try:
+            dataset = load_dataset(config.DATA_PATHS[0]+path, split=split, data_files=data_files)
+        except FileNotFoundError:
+            dataset = load_dataset(config.DATA_PATHS[1]+(path.split("/")[-1]), split=split, data_files=data_files)
+    except ValueError:
+        try:
+            dataset = load_from_disk(config.DATA_PATHS[0]+path)
+        except FileNotFoundError:
+            dataset = load_from_disk(config.DATA_PATHS[1]+(path.split("/")[-1]))
+    print("FM - Loaded Dataset:", path)
     return dataset
 
 
 def extract_boxed_text(x):
-    last_boxed = x.split("\\boxed{")[-1]
+    splitted = x.split("\\boxed{")
+    if len(splitted) == 1:
+        return ""
+    last_boxed = splitted[-1]
     n_left = 1
     n_right = 0
     output = ""
@@ -26,9 +40,9 @@ def extract_boxed_text(x):
         elif char == "{":
             n_left += 1
         if n_left == n_right:
-            break
+            return output
         output += char
-    return output
+    return ""
 
 
 def print_distribution(column, column_name):

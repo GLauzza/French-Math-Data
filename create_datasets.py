@@ -193,7 +193,8 @@ cot_datasets = [
     },
 ]
 cot_dataset = fusion_datasets(cot_datasets)
-# cot_dataset.save_to_disk(config.DATA_PATHS[1] + "Fused-CoT")
+cot_dataset = cot_dataset.filter(lambda x: x["solution"] is not None)
+cot_dataset.save_to_disk(config.DATA_PATHS[1] + "Fused-CoT")
 
 eval_datasets = [
     {

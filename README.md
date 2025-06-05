@@ -9,12 +9,11 @@ You can download the math datasets by calling ```python ./process_data/get_data.
 
 Once all the datasets are downloaded you can create the CoT and Eval datasets by calling ```python ./create_datasets.py```
 
-To evaluate your models, edit the ```eval.py``` to add the model you want to evaluate along with their chat template function. This will generate an ```eval.json``` file containing the results of the evaluation.
+To evaluate your models, edit the ```eval.py``` to add the model you want to evaluate along with their chat template function and sampling params in ```model_configs.py```. This will generate an ```eval.json``` file containing the results of the evaluation.
 
 You can explore those results using the ```plot_eval.ipynb``` notebook.
 
 ### TODOs
-
 
 - [ ] check llama-nemotron answer correctly extracted
 - [ ] check sourcing and models
@@ -27,3 +26,9 @@ You can explore those results using the ```plot_eval.ipynb``` notebook.
 - [ ] handle openr1 finish reason, s1 cot type, numina/openr1 question type filtering
 - [ ] check extraction of boxed works perfectly
 - [ ] evaluate if answer length / question lenght / CoT length is correlated with accuracy
+- [ ] format the training data such that CoT ends by \\boxed{}
+- [ ] do I need to train to predict end of text token ?
+- [ ] add custom response template
+- [ ] add SFT checkpointing
+- [ ] see if math verify not supporting french is a problem
+- [ ] check how NEMO handles chat templates for finetuning

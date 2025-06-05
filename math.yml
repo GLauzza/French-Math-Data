@@ -16,3 +16,6 @@ dependencies:
     - torch
     - vllm
     - math-verify
+    - trl
+    - tensorboard
+    - zarr
