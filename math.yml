@@ -18,4 +18,4 @@ dependencies:
     - math-verify
     - trl
     - tensorboard
-    - zarr
+    - liger-kernel

@@ -16,12 +16,18 @@ def load_data(path, data_files=None, split="train"):
         try:
             dataset = load_dataset(config.DATA_PATHS[0]+path, split=split, data_files=data_files)
         except FileNotFoundError:
-            dataset = load_dataset(config.DATA_PATHS[1]+(path.split("/")[-1]), split=split, data_files=data_files)
+            try:
+                dataset = load_dataset(config.DATA_PATHS[1]+(path.split("/")[-1]), split=split, data_files=data_files)
+            except FileNotFoundError:
+                dataset = load_dataset(config.DATA_PATHS[2]+(path.split("/")[-1]), split=split, data_files=data_files)
     except ValueError:
         try:
             dataset = load_from_disk(config.DATA_PATHS[0]+path)
         except FileNotFoundError:
-            dataset = load_from_disk(config.DATA_PATHS[1]+(path.split("/")[-1]))
+            try:
+                dataset = load_from_disk(config.DATA_PATHS[1]+(path.split("/")[-1]))
+            except FileNotFoundError:
+                dataset = load_from_disk(config.DATA_PATHS[2]+(path.split("/")[-1]))
     print("FM - Loaded Dataset:", path)
     return dataset
 

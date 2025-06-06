@@ -1,4 +1,6 @@
 import json
+import shutil
+import argparse
 
 from tqdm import tqdm
 import torch
@@ -82,7 +84,7 @@ def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_si
 
 
 def eval_models(models_configs, dataset_name):
-    with open("eval.json", "r+") as f:
+    with open(config.DATA_PATHS[2] + dataset_name + "/eval.json", "r+") as f:
         print("FM - Loading Evaluation File")
         output = json.load(f)
 
@@ -100,10 +102,11 @@ def eval_models(models_configs, dataset_name):
             json.dump(output, f)
             f.truncate()
             print("FM - Dumped", output)
+    shutil.copy(config.DATA_PATHS[2] + dataset_name + "/eval.json", config.DATA_PATHS[1] + dataset_name + "/eval.json")
 
 
 if __name__ == "__main__":
-    MODELS_NAMES = [
+    default_models = [
         "Qwen2.5-Math-7B-Instruct",
         "Qwen3-8B",
         "Lucie-7B-Instruct-v1.1",
@@ -115,8 +118,11 @@ if __name__ == "__main__":
         "Pensez-v0.1-e5",
         "Llama-3.1-8B-Instruct",
     ]
-    DATASET_NAME = "Eval-Math-FR"
+    parser = argparse.ArgumentParser(description='Transform a dataset from Huggingface format to Nemo finetuning format')
+    parser.add_argument('--models', nargs='+', default=default_models, description="Models to evaluate on")
+    parser.add_argument('--dataset', type=str, default="Eval-Math-FR", help='Dataset to evaluate on')
+    args = parser.parse_args()
 
     print("FM - Getting configs")
-    models_configs = get_configs(MODELS_NAMES)
-    eval_models(models_configs, DATASET_NAME)
+    models_configs = get_configs(args.models)
+    eval_models(models_configs, args.dataset)

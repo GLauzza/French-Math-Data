@@ -1,6 +1,8 @@
 import json
 import sys
 import os 
+import shutil
+import argparse
 
 from tqdm import tqdm
 import datasets
@@ -23,16 +25,19 @@ def hf_to_nemo(dataset, output_path, chat_template_fun, tokenizer):
 
 
 if __name__ == "__main__":
-    MODEL_NAME = "Qwen2.5-Math-7B-Instruct"
-    DATASET_NAME = "Fused-CoT"
+    parser = argparse.ArgumentParser(description='Transform a dataset from Huggingface format to Nemo finetuning format')
+    parser.add_argument('--model', type=str, default="Qwen2.5-Math-7B-Instruct", help='Model to use for chat template')
+    parser.add_argument('--dataset', type=str, default="Fused-CoT", help='Dataset to transform')
+    args = parser.parse_args()
 
     print("FM - Getting Config")
-    model_path, chat_template_fun, _ = get_config(MODEL_NAME)
+    model_path, chat_template_fun, _ = get_config(args.model)
     model, tokenizer = load_model(model_path)
 
-    dataset =  load_data(DATASET_NAME)
+    dataset =  load_data(args.dataset)
 
     print("FM - Converting Dataset to Nemo")
-    output_path = config.DATA_PATHS[1] + DATASET_NAME + "_NEMO"
+    output_path = config.DATA_PATHS[2] + args.dataset + "_NEMO"
     hf_to_nemo(dataset, output_path, chat_template_fun, tokenizer)
+    shutil.copytree(output_path, config.DATA_PATHS[1] + args.dataset + "_NEMO")
     print("FM - Dataset Converted to Nemo")
