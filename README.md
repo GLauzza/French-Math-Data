@@ -33,3 +33,4 @@ You can explore those results using the ```plot_eval.ipynb``` notebook.
 - [ ] see if math verify not supporting french is a problem
 - [ ] check how NEMO handles chat templates for finetuning
 - [ ] think on how to pad during training (padding free doesn't work with custom datacollator)
+- [ ] fix eval of n samples (not sure about the output format)

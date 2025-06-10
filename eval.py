@@ -3,8 +3,6 @@ import shutil
 import argparse
 
 from tqdm import tqdm
-import torch
-import datasets
 from math_verify import parse, verify
 
 import config
@@ -25,27 +23,9 @@ def to_latex(text):
         return "$" + text + "$"
 
 
-def prepare_data(chat_template_fun, dataset, batch_size):
-    print("FM - Preparing Data")
-    dataset = dataset.add_column(
-        "chat_input",
-        [chat_template_fun(question) for question in dataset["question"]]
-    )
-    dataset = dataset.add_column(
-        "input_length",
-        [len(question) for question in dataset["question"]]
-    )
-    dataset = dataset.sort("input_length")
-
-    sources = set(dataset["source"])
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
-    print("FM - Prepared Data")
-    return dataset, dataloader, sources
-
-
 def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_size=64):
     dataset = load_data(dataset_name)
-    dataset, dataloader, sources = prepare_data(chat_template_fun, dataset, batch_size)
+    dataset, dataloader, sources = prepare_inference_data(chat_template_fun, dataset, batch_size)
     accuracies, cot_lengths, samples = {}, {}, {}
 
     for source in sources:
@@ -118,7 +98,7 @@ if __name__ == "__main__":
         "Pensez-v0.1-e5",
         "Llama-3.1-8B-Instruct",
     ]
-    parser = argparse.ArgumentParser(description='Transform a dataset from Huggingface format to Nemo finetuning format')
+    parser = argparse.ArgumentParser(description='Evaluate a list of models on the dataset')
     parser.add_argument('--models', nargs='+', default=default_models, description="Models to evaluate on")
     parser.add_argument('--dataset', type=str, default="Eval-Math-FR", help='Dataset to evaluate on')
     args = parser.parse_args()

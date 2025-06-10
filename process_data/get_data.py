@@ -1,5 +1,6 @@
 import sys
 import os
+import shutil
 
 from huggingface_hub import snapshot_download
 from datasets import load_dataset
@@ -9,12 +10,14 @@ import config
 
 
 def get_huggingface_data(repo_id, allow_patterns):
+    output_path = config.DATA_PATHS[2] + repo_id.split("/")[-1]
     snapshot_download(
         repo_id=repo_id,
-        local_dir=config.DATA_PATHS[1]+repo_id.split("/")[-1],
+        local_dir=output_path,
         repo_type="dataset",
         allow_patterns=allow_patterns
     )
+    shutil.copytree(output_path, config.MODEL_PATHS[1] + repo_id.split("/")[-1])
 
 
 def get_am_deepseek_distill():
