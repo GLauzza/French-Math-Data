@@ -17,7 +17,7 @@ def get_huggingface_data(repo_id, allow_patterns):
         repo_type="dataset",
         allow_patterns=allow_patterns
     )
-    shutil.copytree(output_path, config.MODEL_PATHS[1] + repo_id.split("/")[-1])
+    shutil.copytree(output_path, config.DATA_PATHS[1] + repo_id.split("/")[-1], dirs_exist_ok=True)
 
 
 def get_am_deepseek_distill():
@@ -98,7 +98,7 @@ def get_swallowmath():
     # get_huggingface_data("tokyotech-llm/swallow-math", ["train-00002-of-00002.jsonl"]) # ~3GB
 
 
-def main():
+if __name__ == "__main__":
     # get_am_deepseek_distill()
     get_big_math()
     get_limo()
@@ -117,7 +117,3 @@ def main():
     get_poly_math()
     get_s1k_1_1()
     # get_swallowmath()
-
-
-if __name__ == "__main__":
-    main()

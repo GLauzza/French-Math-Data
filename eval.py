@@ -25,7 +25,11 @@ def to_latex(text):
 
 def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_size=64):
     dataset = load_data(dataset_name)
-    dataset, dataloader, sources = prepare_inference_data(chat_template_fun, dataset, batch_size)
+    dataset, dataloader, sources = prepare_inference_data(
+        dataset,
+        chat_template_fun,
+        batch_size=batch_size,
+    )
     accuracies, cot_lengths, samples = {}, {}, {}
 
     for source in sources:

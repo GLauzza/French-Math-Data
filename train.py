@@ -16,7 +16,7 @@ def prepare_data(chat_template_fun, dataset, tokenizer):
     return dataset
 
 
-def train(model, tokenizer, dataset, output_path):
+def train(model, tokenizer, dataset, new_model_name):
     print("FM - Instantiate Training")
     training_args = SFTConfig(
         dataset_text_field = "chat_input",
@@ -32,10 +32,10 @@ def train(model, tokenizer, dataset, output_path):
         optim = "adamw_bnb_8bit",
         weight_decay = 0.01,
         lr_scheduler_type = "linear",
-        output_dir = output_path,
+        output_dir = config.MODEL_PATHS[2] + new_model_name,
         report_to = "tensorboard",
         save_safetensors=False,
-        logging_dir=output_path + "/logs",
+        logging_dir=config.MODEL_PATHS[2] + new_model_name + "/logs",
         seed=0,
         use_liger_kernel=True,
         max_length=128,
@@ -78,11 +78,11 @@ if __name__ == "__main__":
     print("FM - Preparing Data")
     dataset = prepare_data(chat_template_fun, dataset, tokenizer)
 
-    output_path = config.MODEL_PATHS[2] + args.model + "_SFT_" + args.dataset
-    train(model, tokenizer, dataset, output_path)
+    new_model_name = config.MODEL_PATHS[2] + args.model + "-SFT-" + args.dataset
+    train(model, tokenizer, dataset, new_model_name)
 
     print("FM - Saving")
-    model.save_pretrained(output_path, safe_serialization=False)
-    tokenizer.save_pretrained(output_path)
-    shutil.copytree(output_path, config.MODEL_PATHS[1] + args.model + "_SFT_" + args.dataset)
+    model.save_pretrained(config.MODEL_PATHS[2] + new_model_name, safe_serialization=False)
+    tokenizer.save_pretrained(config.MODEL_PATHS[2] + new_model_name)
+    shutil.copytree(config.MODEL_PATHS[2] + new_model_name, config.MODEL_PATHS[1] + new_model_name, dirs_exist_ok=True)
     print("FM - Saved")

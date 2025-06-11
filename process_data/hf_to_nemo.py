@@ -39,5 +39,5 @@ if __name__ == "__main__":
     print("FM - Converting Dataset to Nemo")
     output_path = config.DATA_PATHS[2] + args.dataset + "_NEMO"
     hf_to_nemo(dataset, output_path, chat_template_fun, tokenizer)
-    shutil.copytree(output_path, config.DATA_PATHS[1] + args.dataset + "_NEMO")
+    shutil.copytree(output_path, config.DATA_PATHS[1] + args.dataset + "_NEMO", dirs_exist_ok=True)
     print("FM - Dataset Converted to Nemo")

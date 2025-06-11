@@ -5,6 +5,7 @@ import os
 from datasets import load_dataset, Dataset, load_from_disk
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import config
@@ -133,19 +134,23 @@ def fusion_datasets(datasets):
     return Dataset.from_dict(fused_dataset)
 
 
-def prepare_inference_data(chat_template_fun, dataset, batch_size):
+def prepare_inference_data(dataset, chat_template_fun, batch_size, input_name="question", use_only_input=False):
     print("FM - Preparing Data")
     dataset = dataset.add_column(
         "chat_input",
-        [chat_template_fun(question) for question in dataset["question"]]
+        [chat_template_fun(question) for question in dataset[input_name]]
     )
     dataset = dataset.add_column(
         "input_length",
         [len(question) for question in dataset["question"]]
     )
     dataset = dataset.sort("input_length")
-
     sources = set(dataset["source"])
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
+
+    if use_only_input:
+        dataloader = torch.utils.data.DataLoader(dataset["chat_input"], batch_size=batch_size, shuffle=False)
+    else:
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
+
     print("FM - Prepared Data")
     return dataset, dataloader, sources

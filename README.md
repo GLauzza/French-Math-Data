@@ -34,3 +34,7 @@ You can explore those results using the ```plot_eval.ipynb``` notebook.
 - [ ] check how NEMO handles chat templates for finetuning
 - [ ] think on how to pad during training (padding free doesn't work with custom datacollator)
 - [ ] fix eval of n samples (not sure about the output format)
+- [ ] qwen3 disable thinking for translation
+- [ ] add variable chat templates depending on config type
+- [ ] add answer and training on french dataset (check if answers need to be translated)
+- [ ] add language forcing
