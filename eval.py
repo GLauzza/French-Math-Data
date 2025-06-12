@@ -10,19 +10,6 @@ from process_data.utils_data import *
 from utils_model import *
 
 
-def to_latex(text):
-    if (
-        (text[0] == "$" and text[-1] == "$") or
-        (text[0] == "[" and text[-1] == "]") or
-        (text[:2] == "\\[" and text[-2:] == "\\]") or
-        (text[:2] == "\\(" and text[-2:] == "\\)") or
-        (text[:7] == "\\boxed{" and text[-1] == "}")
-    ):
-        return text
-    else:
-        return "$" + text + "$"
-
-
 def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_size=64):
     dataset = load_data(dataset_name)
     dataset, dataloader, sources = prepare_inference_data(
@@ -30,8 +17,8 @@ def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_si
         chat_template_fun,
         batch_size=batch_size,
     )
-    accuracies, cot_lengths, samples = {}, {}, {}
 
+    accuracies, cot_lengths, samples = {}, {}, {}
     for source in sources:
         accuracies[source] = 0
         cot_lengths[source] = 0
@@ -74,9 +61,9 @@ def eval_models(models_configs, dataset_name):
 
         for model_path, chat_template_fun, sampling_params in models_to_evaluate:
             model = load_model(model_path, is_vllm=True)
-            print("FM - Evaluating")
+            print("FM - Evaluating:", model_path, dataset_name)
             accuracies, cot_lengths, samples = eval_model(model, chat_template_fun, sampling_params, dataset_name)
-            print("FM - Dumping")
+            print("FM - Dumping:", model_path, dataset_name)
             output[model_path] = {
                 "accuracies": accuracies,
                 "cot_lengths": cot_lengths,
@@ -86,6 +73,7 @@ def eval_models(models_configs, dataset_name):
             json.dump(output, f)
             f.truncate()
             print("FM - Dumped", output)
+
     shutil.copy(config.DATA_PATHS[2] + dataset_name + "/eval.json", config.DATA_PATHS[1] + dataset_name + "/eval.json")
 
 
@@ -102,11 +90,12 @@ if __name__ == "__main__":
         "Pensez-v0.1-e5",
         "Llama-3.1-8B-Instruct",
     ]
+
     parser = argparse.ArgumentParser(description='Evaluate a list of models on the dataset')
     parser.add_argument('--models', nargs='+', default=default_models, description="Models to evaluate on")
     parser.add_argument('--dataset', type=str, default="Eval-Math-FR", help='Dataset to evaluate on')
     args = parser.parse_args()
 
-    print("FM - Getting configs")
     models_configs = get_configs(args.models)
+
     eval_models(models_configs, args.dataset)

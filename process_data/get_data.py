@@ -22,7 +22,6 @@ def get_huggingface_data(repo_id, allow_patterns):
 
 def get_am_deepseek_distill():
     get_huggingface_data("a-m-team/AM-DeepSeek-Distilled-40M", ["math_r1_*.jsonl"]) # ~40GB
-    # get_huggingface_data("a-m-team/AM-DeepSeek-Distilled-40M", ["math_r1_1pass.jsonl"]) # ~10GB
 
 
 def get_big_math():
@@ -49,11 +48,6 @@ def get_mclm():
     get_huggingface_data("amphora/MCLM", ["*.parquet"]) # ~2MB
 
 
-def get_megamath_web_pro():
-    get_huggingface_data("LLM360/MegaMath", ["megamath-web-pro/*.parquet"]) # ~50GB
-    # get_huggingface_data("LLM360/MegaMath", ["megamath-web-pro/000_00000.parquet"]) # ~600MB
-
-
 def get_metamath_qa():
     get_huggingface_data("meta-math/MetaMathQA", ["*.json"]) # ~400MB
 
@@ -73,12 +67,10 @@ def get_numinamath_1_5():
 
 def get_open_r1_math():
     get_huggingface_data("open-r1/OpenR1-Math-220k", ["all/*.parquet"]) # ~8GB
-    # get_huggingface_data("open-r1/OpenR1-Math-220k", ["all/train-00000-of-00020.parquet"]) # ~200MB
 
 
 def get_open_thoughts_2():
     get_huggingface_data("open-thoughts/OpenThoughts2-1M", ["data/*.parquet"]) # ~8GB
-    # get_huggingface_data("open-thoughts/OpenThoughts2-1M", ["data/train-00000-of-00038.parquet"]) # ~200MB
 
 
 def get_pensez():
@@ -93,27 +85,20 @@ def get_s1k_1_1():
     get_huggingface_data("simplescaling/s1K-1.1", ["data/*.parquet"]) # ~20MB
 
 
-def get_swallowmath():
-    get_huggingface_data("tokyotech-llm/swallow-math", ["*.jsonl"]) # ~13GB
-    # get_huggingface_data("tokyotech-llm/swallow-math", ["train-00002-of-00002.jsonl"]) # ~3GB
-
-
 if __name__ == "__main__":
-    # get_am_deepseek_distill()
+    # get_am_deepseek_distill() # Already on JZ
     get_big_math()
     get_limo()
     get_limr()
-    # get_llama_nemotron()
+    # get_llama_nemotron() # Already on JZ
     get_math_lvl5_fr()
     get_mclm() 
-    # get_megamath_web_pro()
     get_metamath_qa()
     get_mgsm() 
     get_msvamp()
     get_numinamath_1_5()
-    # get_open_r1_math()
-    # get_open_thoughts_2()
+    # get_open_r1_math() # Already on JZ
+    # get_open_thoughts_2() # Already on JZ
     get_pensez()
     get_poly_math()
     get_s1k_1_1()
-    # get_swallowmath()

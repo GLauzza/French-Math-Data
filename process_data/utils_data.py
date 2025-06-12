@@ -134,6 +134,19 @@ def fusion_datasets(datasets):
     return Dataset.from_dict(fused_dataset)
 
 
+def to_latex(text):
+    if (
+        (text[0] == "$" and text[-1] == "$") or
+        (text[0] == "[" and text[-1] == "]") or
+        (text[:2] == "\\[" and text[-2:] == "\\]") or
+        (text[:2] == "\\(" and text[-2:] == "\\)") or
+        (text[:7] == "\\boxed{" and text[-1] == "}")
+    ):
+        return text
+    else:
+        return "$" + text + "$"
+
+
 def prepare_inference_data(dataset, chat_template_fun, batch_size, input_name="question", use_only_input=False):
     print("FM - Preparing Data")
     dataset = dataset.add_column(

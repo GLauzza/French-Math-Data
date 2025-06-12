@@ -89,6 +89,7 @@ def to_chat_template_deepseek(task):
 
 
 def get_config(name, task="math", n=5):
+    print("FM - Getting Config:", name, task)
     DEFAULT_CHAT_TEMPLATE = to_chat_template_qwen_2_5(task)
     DEFAULT_SAMPLING_PARAMS = SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=30, presence_penalty=0.5, max_tokens=32768, seed=0)
 

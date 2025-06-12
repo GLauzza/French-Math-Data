@@ -38,3 +38,4 @@ You can explore those results using the ```plot_eval.ipynb``` notebook.
 - [ ] add variable chat templates depending on config type
 - [ ] add answer and training on french dataset (check if answers need to be translated)
 - [ ] add language forcing
+- [ ] do we keep learning signal from failed samples (contrastive / imitating RL with SFT)

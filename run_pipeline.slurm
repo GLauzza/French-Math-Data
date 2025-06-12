@@ -19,11 +19,25 @@ conda activate vllmath
 
 set -x
 
+echo "SLURM: -------------------- GETTING DATA ---------------------------"
 srun python ~/git/French-Math-Data/process_data/get_data.py
-srun python ~/git/French-Math-Data/create_datasets.py
+
+echo "SLURM: ----------------- CREATING COT / EVAL -----------------------"
+srun python ~/git/French-Math-Data/create_datasets.py --datasets Fused-CoT Eval-Math-FR
+
+echo "SLURM: --------------------- TRANSLATING ---------------------------"
 srun python ~/git/French-Math-Data/infer.py --model Qwen3-8B --dataset Fused-CoT --task translation
+
+echo "SLURM: ----------------------- SOLVING -----------------------------"
 srun python ~/git/French-Math-Data/infer.py --model Qwen3-8B --dataset Fused-CoT-FR --task math_fr
-srun python ~/git/French-Math-Data/train.py --model Qwen3-8B --dataset Fused-CoT-FR-Solved
-# TODO filter right and french solution / reformat
-srun python ~/git/French-Math-Data/eval.py --models Qwen3-8B Qwen3-8B-SFT-Fused-CoT-FR-Solved --dataset Eval-Math-FR
+
+echo "SLURM: ----------------- CREATING TRAIN DATA -----------------------"
+srun python ~/git/French-Math-Data/create_datasets.py --datasets Train-Math-FR
+
+echo "SLURM: ---------------------- TRAINING -----------------------------"
+srun python ~/git/French-Math-Data/train.py --model Qwen3-8B --dataset Train-Math-FR
+
+echo "SLURM: --------------------- EVALUATING ----------------------------"
+srun python ~/git/French-Math-Data/eval.py --models Qwen3-8B Qwen3-8B-SFT-Train-Math-FR --dataset Eval-Math-FR
+
 

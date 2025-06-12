@@ -150,3 +150,17 @@ def filter_s1k_1_1(dataset):
     dataset = dataset.filter(lambda x: x["deepseek_grade"] == "Yes")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
+
+
+def filter_train_math_fr(dataset):
+    n_samples = dataset.num_rows
+    # Question too short/long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 512))
+    # Solution too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 16384))
+    # Answer too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 512))
+    # Invalid solution
+    dataset = dataset.filter(lambda x: x["valid"])
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    return dataset

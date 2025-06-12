@@ -14,6 +14,7 @@ from utils_model import *
 
 
 def hf_to_nemo(dataset, output_path, chat_template_fun, tokenizer):
+    print("FM - Converting Dataset to Nemo")
     os.makedirs(output_path, exist_ok=True) 
     with open(output_path + "/training.jsonl", "w") as f:
         for sample in tqdm(dataset):
@@ -22,6 +23,7 @@ def hf_to_nemo(dataset, output_path, chat_template_fun, tokenizer):
                 "output": sample["solution"] + tokenizer.eos_token,
             }, f)
             f.write("\n")
+    print("FM - Dataset Converted to Nemo")
 
 
 if __name__ == "__main__":
@@ -30,14 +32,13 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', type=str, default="Fused-CoT", help='Dataset to transform')
     args = parser.parse_args()
 
-    print("FM - Getting Config")
     model_path, chat_template_fun, _ = get_config(args.model)
     model, tokenizer = load_model(model_path)
 
     dataset =  load_data(args.dataset)
 
-    print("FM - Converting Dataset to Nemo")
     output_path = config.DATA_PATHS[2] + args.dataset + "_NEMO"
+    
     hf_to_nemo(dataset, output_path, chat_template_fun, tokenizer)
+
     shutil.copytree(output_path, config.DATA_PATHS[1] + args.dataset + "_NEMO", dirs_exist_ok=True)
-    print("FM - Dataset Converted to Nemo")

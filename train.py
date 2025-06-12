@@ -9,10 +9,12 @@ from process_data.utils_data import *
 
 
 def prepare_data(chat_template_fun, dataset, tokenizer):
+    print("FM - Preparing Data")
     dataset = dataset.add_column(
         "chat_input",
         [chat_template_fun(sample["question"]) + sample["solution"] + tokenizer.eos_token for sample in dataset]
     )
+    print("FM - Prepared Data")
     return dataset
 
 
@@ -68,17 +70,20 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train model with TRL')
     parser.add_argument('--model', type=str, default="Qwen2.5-Math-7B-Instruct", help='Model to train')
     parser.add_argument('--dataset', type=str, default="Fused-CoT", help='Dataset to train on')
+    parser.add_argument('--name', type=str, default=None, help='Name of the new model')
     args = parser.parse_args()
 
-    print("FM - Getting Config")
     model_path, chat_template_fun, _ = get_config(args.model)
     model, tokenizer = load_model(model_path)
 
     dataset = load_data(args.dataset)
-    print("FM - Preparing Data")
     dataset = prepare_data(chat_template_fun, dataset, tokenizer)
 
-    new_model_name = config.MODEL_PATHS[2] + args.model + "-SFT-" + args.dataset
+    if args.name:
+        new_model_name = args.name
+    else:
+        new_model_name = config.MODEL_PATHS[2] + args.model + "-SFT-" + args.dataset
+
     train(model, tokenizer, dataset, new_model_name)
 
     print("FM - Saving")
