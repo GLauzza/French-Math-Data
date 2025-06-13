@@ -24,7 +24,6 @@ You can explore those results using the ```plot_eval.ipynb``` notebook.
 - [ ] put hyperparams of filters in config
 - [ ] keep categories features of some datasets
 - [ ] handle openr1 finish reason, s1 cot type, numina/openr1 question type filtering
-- [ ] check extraction of boxed works perfectly
 - [ ] evaluate if answer length / question lenght / CoT length is correlated with accuracy
 - [ ] format the training data such that CoT ends by \\boxed{}
 - [ ] do I need to train to predict end of text token ?
@@ -39,3 +38,7 @@ You can explore those results using the ```plot_eval.ipynb``` notebook.
 - [ ] add answer and training on french dataset (check if answers need to be translated)
 - [ ] add language forcing
 - [ ] do we keep learning signal from failed samples (contrastive / imitating RL with SFT)
+- [ ] check extraction of boxed works perfectly
+- [ ] get sampling params this way: "Default sampling parameters have been overridden by the model's Hugging Face generation config recommended from the model creator. If this is not intended, please relaunch vLLM instance with `--generation-config vllm`"
+- [ ] comment gerer les balises think ?
+- [ ] budget control

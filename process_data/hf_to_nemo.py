@@ -35,10 +35,10 @@ if __name__ == "__main__":
     model_path, chat_template_fun, _ = get_config(args.model)
     model, tokenizer = load_model(model_path)
 
-    dataset =  load_data(args.dataset)
+    dataset = load_data(args.dataset)
 
-    output_path = config.DATA_PATHS[2] + args.dataset + "_NEMO"
+    output_path = config.DATA_PATHS[2] + args.dataset + "-NEMO"
     
     hf_to_nemo(dataset, output_path, chat_template_fun, tokenizer)
 
-    shutil.copytree(output_path, config.DATA_PATHS[1] + args.dataset + "_NEMO", dirs_exist_ok=True)
+    shutil.copytree(output_path, config.DATA_PATHS[1] + args.dataset + "-NEMO", dirs_exist_ok=True)

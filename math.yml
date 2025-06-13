@@ -19,3 +19,4 @@ dependencies:
     - trl
     - tensorboard
     - liger-kernel
+    - deepspeed

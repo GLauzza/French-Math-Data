@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+import argparse
 
 from datasets import load_dataset, Dataset, Value
 import numpy as np
@@ -16,8 +17,8 @@ if __name__ == "__main__":
         "Eval-Math-FR",
     ]
     parser = argparse.ArgumentParser(description='Create a dataset')
-    parser.add_argument('--datasets', nargs='+', default=default_models, description="Datasets to create")
-    parser.add_argument('--model', nargs='str', default="Qwen3-8B", description="Which model solution to use for training dataset")
+    parser.add_argument('--datasets', nargs='+', default=default_datasets, help="Datasets to create")
+    parser.add_argument('--model', type=str, default="", help="Which model solution to use for training dataset")
     args = parser.parse_args()
 
     if "Fused-CoT" in args.datasets:    
@@ -241,21 +242,22 @@ if __name__ == "__main__":
         eval_math_fr.save_to_disk(config.DATA_PATHS[2] + "Eval-Math-FR")
         eval_math_fr.save_to_disk(config.DATA_PATHS[1] + "Eval-Math-FR")
 
-        if "Train-Math-FR" in args.datasets:
-            train_math_fr = load_data("Fused-CoT-FR-Solved")
-            train_math_fr = train_math_fr.rename_column("question", "question_en")
-            train_math_fr = train_math_fr.rename_column("question_fr", "question")
+    if "Train-Math-FR" in args.datasets:
+        model_ext = "_"*(len(args.model) > 0) + args.model
+        train_math_fr = load_data("Fused-CoT-FR-Solved")
+        train_math_fr = train_math_fr.rename_column("question", "question_en")
+        train_math_fr = train_math_fr.rename_column("question_fr", "question")
 
-            train_math_fr = train_math_fr.rename_column("answer", "answer_en")
-            train_math_fr = train_math_fr.rename_column("answer_fr_" + args.model, "answer")
+        train_math_fr = train_math_fr.rename_column("answer", "answer_en")
+        train_math_fr = train_math_fr.rename_column("answer_fr" + model_ext, "answer")
 
-            train_math_fr = train_math_fr.rename_column("solution", "solution_en")
-            train_math_fr = train_math_fr.rename_column("solution_fr_" + args.model, "solution")
+        train_math_fr = train_math_fr.rename_column("solution", "solution_en")
+        train_math_fr = train_math_fr.rename_column("solution_fr" + model_ext, "solution")
 
-            train_math_fr = train_math_fr.rename_column("valid_fr_" + args.model, "valid")
+        train_math_fr = train_math_fr.rename_column("valid_fr" + model_ext, "valid")
 
-            train_math_fr = filter_train_math_fr(train_math_fr)
+        train_math_fr = filter_train_math_fr(train_math_fr)
 
-            train_math_fr.save_to_disk(config.DATA_PATHS[2] + "Train-Math-FR")
-            train_math_fr.save_to_disk(config.DATA_PATHS[1] + "Train-Math-FR")
+        train_math_fr.save_to_disk(config.DATA_PATHS[2] + "Train-Math-FR")
+        train_math_fr.save_to_disk(config.DATA_PATHS[1] + "Train-Math-FR")
 

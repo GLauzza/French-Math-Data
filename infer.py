@@ -1,7 +1,5 @@
 import shutil
 import argparse
-import sys
-import os
 
 from tqdm import tqdm
 
@@ -11,11 +9,11 @@ from process_data.utils_data import *
 from math_verify import parse, verify   
 
 
-def infer(model, dataset, dataloader, output_name):
+def infer(model, dataset, dataloader, output_name, sampling_params):
     print("FM - Infering")
     outputs = []
     for x in tqdm(dataloader):
-        request_outputs = model.generate(x)
+        request_outputs = model.generate(x, sampling_params)
         outputs += [request_output.outputs[0].text for request_output in request_outputs]
     print("FM - Infered")
 
@@ -47,6 +45,7 @@ if __name__ == "__main__":
     parser.add_argument('--model', type=str, default="Qwen3-8B", help='Model to use for inference')
     parser.add_argument('--dataset', type=str, default="Fused-CoT", help='Dataset to use for inference')
     parser.add_argument('--task', type=str, default="translation", help='Task to prompt to the model')
+    parser.add_argument('--input', type=str, default="question", help='Input to use for the task')
     parser.add_argument('--name', type=str, default=None, help='Name of the new dataset')
     args = parser.parse_args()
 
@@ -57,7 +56,7 @@ if __name__ == "__main__":
             top_p=0.8, 
             top_k=10, 
             min_p=0, 
-            max_tokens=1024,    
+            max_tokens=(32768 if args.input == "solution" else 1024),    
             seed=0
         )
     model = load_model(model_path, is_vllm=True)
@@ -67,12 +66,12 @@ if __name__ == "__main__":
         dataset,
         chat_template_fun,
         batch_size=64,
-        input_name="question" + "_fr"*(args.task[-3:] == "_fr"),
+        input_name=args.input + "_fr"*(args.task[-3:] == "_fr"),
         use_only_input=True
     )
 
     if args.task == "translation":
-        output_name = "question_fr"
+        output_name = args.input + "_fr"
         new_dataset_name = args.dataset + "-FR"
     elif args.task == "math":
         output_name = "solution" + args.model
@@ -81,9 +80,9 @@ if __name__ == "__main__":
         output_name = "solution_fr_" + args.model
         new_dataset_name = args.dataset + "-Solved"
     if args.name:
-        output_name = args.name
+        new_dataset_name = args.name
 
-    dataset = infer(model, dataset, dataloader, output_name, args.task)
+    dataset = infer(model, dataset, dataloader, output_name, sampling_params)
 
     print("FM - Saving")
     dataset.save_to_disk(config.DATA_PATHS[2] + new_dataset_name)

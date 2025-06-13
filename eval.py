@@ -11,7 +11,7 @@ from utils_model import *
 
 
 def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_size=64):
-    dataset = load_data(dataset_name)
+    dataset = load_data(dataset_name).select(range(276))
     dataset, dataloader, sources = prepare_inference_data(
         dataset,
         chat_template_fun,
@@ -51,28 +51,34 @@ def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_si
         accuracies[source] = accuracies[source] / n_source
         cot_lengths[source] = cot_lengths[source] / n_source
 
+    free_vllm(model)
+
     return accuracies, cot_lengths, samples
 
 
 def eval_models(models_configs, dataset_name):
-    with open(config.DATA_PATHS[2] + dataset_name + "/eval.json", "r+") as f:
-        print("FM - Loading Evaluation File")
-        output = json.load(f)
+    print("FM - Loading Evaluation File")
+    json_path = config.DATA_PATHS[2] + dataset_name + "/eval.json"
+    if os.path.exists(json_path):
+        with open(json_path, "r+") as f:
+            output = json.load(f)
+    else:
+        output = {} 
 
-        for model_path, chat_template_fun, sampling_params in models_to_evaluate:
-            model = load_model(model_path, is_vllm=True)
-            print("FM - Evaluating:", model_path, dataset_name)
-            accuracies, cot_lengths, samples = eval_model(model, chat_template_fun, sampling_params, dataset_name)
-            print("FM - Dumping:", model_path, dataset_name)
-            output[model_path] = {
-                "accuracies": accuracies,
-                "cot_lengths": cot_lengths,
-                "samples": samples,
-            }
-            f.seek(0)
+    for model_path, chat_template_fun, sampling_params in models_configs:
+        model = load_model(model_path, is_vllm=True)
+        print("FM - Evaluating:", model_path, dataset_name)
+        accuracies, cot_lengths, samples = eval_model(model, chat_template_fun, sampling_params, dataset_name)
+        output[model_path] = {
+            "accuracies": accuracies,
+            "cot_lengths": cot_lengths,
+            "samples": samples,
+        }
+        
+        print("FM - Dumping:", model_path, dataset_name)
+        with open(json_path, 'w') as f:
             json.dump(output, f)
-            f.truncate()
-            print("FM - Dumped", output)
+        print("FM - Dumped", output)
 
     shutil.copy(config.DATA_PATHS[2] + dataset_name + "/eval.json", config.DATA_PATHS[1] + dataset_name + "/eval.json")
 
@@ -92,10 +98,11 @@ if __name__ == "__main__":
     ]
 
     parser = argparse.ArgumentParser(description='Evaluate a list of models on the dataset')
-    parser.add_argument('--models', nargs='+', default=default_models, description="Models to evaluate on")
+    parser.add_argument('--models', nargs='+', default=default_models, help ="Models to evaluate on")
     parser.add_argument('--dataset', type=str, default="Eval-Math-FR", help='Dataset to evaluate on')
+    parser.add_argument('--n', type=int, default=1, help='Number of samples per example')
     args = parser.parse_args()
 
-    models_configs = get_configs(args.models)
+    models_configs = get_configs(args.models, task="math", n=args.n)
 
     eval_models(models_configs, args.dataset)
