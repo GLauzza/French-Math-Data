@@ -61,7 +61,7 @@ if __name__ == "__main__":
         )
     model = load_model(model_path, is_vllm=True)
 
-    dataset = load_data(args.dataset).select(range(16))
+    dataset = load_data(args.dataset)
     dataset, dataloader, _ = prepare_inference_data(
         dataset,
         chat_template_fun,

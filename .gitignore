@@ -5,5 +5,8 @@ Models/
 # Cache
 __pycache__/
 
+# Notebooks
+.ipynb_checkpoints/
+
 # Evaluation
 eval.json

@@ -42,3 +42,4 @@ You can explore those results using the ```plot_eval.ipynb``` notebook.
 - [ ] get sampling params this way: "Default sampling parameters have been overridden by the model's Hugging Face generation config recommended from the model creator. If this is not intended, please relaunch vLLM instance with `--generation-config vllm`"
 - [ ] comment gerer les balises think ?
 - [ ] budget control
+- [ ] redecouper les eval sur Qwen3-8B qui depassent 

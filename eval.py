@@ -11,7 +11,7 @@ from utils_model import *
 
 
 def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_size=64):
-    dataset = load_data(dataset_name).select(range(276))
+    dataset = load_data(dataset_name)
     dataset, dataloader, sources = prepare_inference_data(
         dataset,
         chat_template_fun,

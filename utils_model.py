@@ -125,7 +125,7 @@ def to_chat_template_deepseek(task):
 def get_config(name, task="math", n=1, max_length=1000000):
     print("FM - Getting Config:", name, task)
     DEFAULT_CHAT_TEMPLATE = to_chat_template_qwen_2_5(task)
-    DEFAULT_SAMPLING_PARAMS = SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=30, presence_penalty=0.5, max_tokens=max(32768, max_length), seed=0)
+    DEFAULT_SAMPLING_PARAMS = SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=30, presence_penalty=0.5, max_tokens=min(32768, max_length), seed=0)
 
     if name == "Qwen2.5-Math-7B-Instruct":
         return (
@@ -137,7 +137,7 @@ def get_config(name, task="math", n=1, max_length=1000000):
         return (
             "Qwen/Qwen3-8B",
             to_chat_template_qwen_3(task),
-            SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=max(38912, max_length), seed=0)
+            SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=min(38912, max_length), seed=0)
         )
     elif name == "Lucie-7B-Instruct-v1.1":
         return (
@@ -149,37 +149,37 @@ def get_config(name, task="math", n=1, max_length=1000000):
         return (
             "microsoft/Phi-4-mini-reasoning", 
             to_chat_template_phi4(task),
-            SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=max(32768, max_length), seed=0)
+            SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
     elif name == "deepseek-math-7b-instruct":
         return (
             "deepseek-ai/deepseek-math-7b-instruct", 
             to_chat_template_deepseek(task),
-            SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=max(32768, max_length), seed=0)
+            SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
     elif name == "DeepSeek-R1-Distill-Qwen-7B":
         return (
             "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", 
             to_chat_template_deepseek(task),
-            SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=max(32768, max_length), seed=0)
+            SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
     elif name == "DeepSeek-R1-Distill-Llama-8B":
         return (
             "deepseek-ai/DeepSeek-R1-Distill-Llama-8B", 
             to_chat_template_deepseek(task),
-            SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=max(32768, max_length), seed=0)
+            SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
     elif name == "OpenR1-Distill-7B":
         return (
             "open-r1/OpenR1-Distill-7B", 
             to_chat_template_deepseek(task),
-            SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=max(32768, max_length), seed=0)
+            SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
     elif name == "Pensez-v0.1-e5":
         return (
             "HoangHa/Pensez-v0.1-e5", 
             DEFAULT_CHAT_TEMPLATE,
-            SamplingParams(n=n, temperature=0.8, repetition_penalty=1.1, max_tokens=max(32768, max_length), seed=0)
+            SamplingParams(n=n, temperature=0.8, repetition_penalty=1.1, max_tokens=min(32768, max_length), seed=0)
         )
     elif name == "Llama-3.1-8B-Instruct":
         return (
