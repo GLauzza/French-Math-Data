@@ -56,7 +56,7 @@ def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_si
     return accuracies, cot_lengths, samples
 
 
-def eval_models(models_configs, dataset_name):
+def eval_models(models_configs, dataset_name, batch_size):
     print("FM - Loading Evaluation File")
     json_path = config.DATA_PATHS[2] + dataset_name + "/eval.json"
     if os.path.exists(json_path):
@@ -68,7 +68,7 @@ def eval_models(models_configs, dataset_name):
     for model_path, chat_template_fun, sampling_params in models_configs:
         model = load_model(model_path, is_vllm=True)
         print("FM - Evaluating:", model_path, dataset_name)
-        accuracies, cot_lengths, samples = eval_model(model, chat_template_fun, sampling_params, dataset_name)
+        accuracies, cot_lengths, samples = eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_size)
         output[model_path] = {
             "accuracies": accuracies,
             "cot_lengths": cot_lengths,
@@ -101,8 +101,9 @@ if __name__ == "__main__":
     parser.add_argument('--models', nargs='+', default=default_models, help ="Models to evaluate on")
     parser.add_argument('--dataset', type=str, default="Eval-Math-FR", help='Dataset to evaluate on')
     parser.add_argument('--n', type=int, default=1, help='Number of samples per example')
+    parser.add_argument('--batch-size', type=int, default=64, help='Batch size')
     args = parser.parse_args()
 
     models_configs = get_configs(args.models, task="math", n=args.n)
 
-    eval_models(models_configs, args.dataset)
+    eval_models(models_configs, args.dataset, args.batch_size)

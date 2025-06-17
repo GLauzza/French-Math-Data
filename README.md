@@ -43,3 +43,4 @@ You can explore those results using the ```plot_eval.ipynb``` notebook.
 - [ ] comment gerer les balises think ?
 - [ ] budget control
 - [ ] redecouper les eval sur Qwen3-8B qui depassent 
+- [ ] add latex removing before fasttext

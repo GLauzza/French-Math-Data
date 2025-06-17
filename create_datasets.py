@@ -244,7 +244,7 @@ if __name__ == "__main__":
 
     if "Train-Math-FR" in args.datasets:
         model_ext = "_"*(len(args.model) > 0) + args.model
-        train_math_fr = load_data("Fused-CoT-FR-Solved")
+        train_math_fr = load_data("Raw-Train-Math-FR")
         train_math_fr = train_math_fr.rename_column("question", "question_en")
         train_math_fr = train_math_fr.rename_column("question_fr", "question")
 

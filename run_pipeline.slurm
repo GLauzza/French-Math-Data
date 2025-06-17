@@ -20,38 +20,44 @@ conda activate vllmath
 set -x
 
 echo "SLURM: -------------------- GETTING DATA ---------------------------"
-srun python ~/git/French-Math-Data/process_data/get_data.py
+srun python ./process_data/get_data.py
 
 echo "SLURM: ----------------- CREATING COT / EVAL -----------------------"
-srun python ~/git/French-Math-Data/create_datasets.py --datasets Fused-CoT Eval-Math-FR
+srun python ./create_datasets.py --datasets Fused-CoT Eval-Math-FR
+
+echo "SLURM: ---------------- TRANSLATING QUESTION -----------------------"
+srun python ./infer.py --model Qwen3-32B --dataset Fused-CoT --task translation --input question --name Fused-CoT-FR --batch-size 1
 
 
-# echo "SLURM: ---------------- TRANSLATING QUESTION -----------------------"
-# srun python ~/git/French-Math-Data/infer.py --model Qwen3-8B --dataset Fused-CoT --task translation --input question
+
 
 # echo "SLURM: ----------------------- SOLVING -----------------------------"
-# srun python ~/git/French-Math-Data/infer.py --model Qwen3-8B --dataset Fused-CoT-FR --task math_fr
+# srun python ./infer.py --model Qwen3-32B --dataset Fused-CoT-FR --task math_fr --name Fused-CoT-FR-Solved --batch-size 1
+
+# echo "SLURM: ---------------- CLASSIFYING LANGUAGE -----------------------"
+# srun python ./infer.py --model fasttext --dataset Fused-CoT-FR-Solved --task language_classification --input solution_fr_Qwen3-8B --name Raw-Train-Math-FR --batch-size 1
 
 # echo "SLURM: ----------------- CREATING TRAIN DATA -----------------------"
-# srun python ~/git/French-Math-Data/create_datasets.py --datasets Train-Math-FR --model Qwen3-8B
+# srun python ./create_datasets.py --datasets Train-Math-FR --model Qwen3-32B
 
 # OR
 
-echo "SLURM: ---------------- TRANSLATING QUESTION -----------------------"
-srun python ~/git/French-Math-Data/infer.py --model Qwen3-8B --dataset Fused-CoT --task translation --input question --name Fused-CoT-FR
-
 echo "SLURM: ---------------- TRANSLATING SOLUTION -----------------------"
-srun python ~/git/French-Math-Data/infer.py --model Qwen3-8B --dataset Fused-CoT-FR --task translation --input solution --name Fused-CoT-FR-Solved
+srun python ./infer.py --model Qwen3-32B --dataset Fused-CoT-FR --task translation --input solution --name Fused-CoT-FR-Solved --batch-size 1
+
+echo "SLURM: ---------------- CLASSIFYING LANGUAGE -----------------------"
+srun python ./infer.py --model fasttext --dataset Fused-CoT-FR-Solved --task language_classification --input solution_fr --name Raw-Train-Math-FR --batch-size 1
 
 echo "SLURM: ----------------- CREATING TRAIN DATA -----------------------"
-srun python ~/git/French-Math-Data/create_datasets.py --datasets Train-Math-FR
+srun python ./create_datasets.py --datasets Train-Math-FR
+
 
 
 echo "SLURM: ---------------------- TRAINING -----------------------------"
-srun python ~/git/French-Math-Data/train.py --model Qwen3-8B --dataset Train-Math-FR
-# srun accelerate launch --config_file ~/git/French-Math-Data/deepspeed.yaml ~/git/French-Math-Data/train.py --model Qwen3-8B --dataset Train-Math-FR
+srun python ./train.py --model Qwen3-8B --dataset Train-Math-FR
+# srun accelerate launch --config_file ./deepspeed.yaml ./train.py --model Qwen3-8B --dataset Train-Math-FR
 
 echo "SLURM: --------------------- EVALUATING ----------------------------"
-srun python ~/git/French-Math-Data/eval.py --models Qwen3-8B Qwen3-8B-SFT-Train-Math-FR --dataset Eval-Math-FR
+srun python ./eval.py --models Qwen3-8B --dataset Eval-Math-FR
 
 

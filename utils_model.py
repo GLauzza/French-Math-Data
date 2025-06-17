@@ -4,6 +4,7 @@ import gc
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from vllm import LLM, SamplingParams
 from vllm.distributed.parallel_state import destroy_model_parallel, destroy_distributed_environment
+import fasttext
 
 import config
 
@@ -13,37 +14,54 @@ torch.manual_seed(0)
 torch.cuda.manual_seed(0)
 torch.cuda.manual_seed_all(0)
 
-INSTRUCTIONS = {
+SYSTEM_INSTRUCTIONS = {
     "math": "Please reason step by step, and put your final answer within \\boxed{}.",
     "math_fr": (
         "S'il-te-plaît raisonne étape par étape, et écrit ta réponse finale à l'intérieur de \\boxed{}."
         "Tu doit penser et répondre uniquement en français."
     ),
     "translation": (
-        "Please translate the full following text in French."
+        ""
+    )
+}
+
+USER_INSTRUCTIONS = {
+    "math": "",
+    "math_fr": (
+        ""
+    ),
+    "translation": (
+        "Please translate sentence by sentence the full following text in French."
         "Only output the translation."
         "Don't summarize."
-        "Preserve any mathematical formula formatting."
+        "Preserve any mathematical formula formatting.\n"
+        "Text:\n"
     )
 }
 
 
 def load_model(model_path, is_vllm=False):
     print("FM - Loading Model:", model_path)
-    if is_vllm:
+    if model_path == "facebook/fasttext-language-identification":
+        return fasttext.load_model(config.MODEL_PATHS[0]+model_path+"/model.bin")
+    elif is_vllm:
         try:
             model = LLM(
                 config.MODEL_PATHS[0]+model_path, 
-                # dtype=torch.bfloat16,
-                # trust_remote_code=True,
-                # quantization="bitsandbytes"
+                dtype=torch.bfloat16,
+                trust_remote_code=True,
+                quantization="bitsandbytes",
+                # kv_cache_dtype="fp8",
+                # calculate_kv_scales=True
             )
         except:
             model = LLM(
                 config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
-                # dtype=torch.bfloat16,
-                # trust_remote_code=True,
-                # quantization="bitsandbytes"
+                dtype=torch.bfloat16,
+                trust_remote_code=True,
+                quantization="bitsandbytes",
+                # kv_cache_dtype="fp8",
+                # calculate_kv_scales=True
             )
         print("FM - Loaded Model:", model_path)
         return model
@@ -71,8 +89,8 @@ def free_vllm(model):
 def to_chat_template_qwen_2_5(task):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
     return (lambda x : (
-        f"<|im_start|>system\n{INSTRUCTIONS[task]}<|im_end|>\n"
-        f"<|im_start|>user\n{x}<|im_end|>\n"
+        f"<|im_start|>system\n{SYSTEM_INSTRUCTIONS[task]}<|im_end|>\n"
+        f"<|im_start|>user\n{USER_INSTRUCTIONS[task]}{x}<|im_end|>\n"
         f"<|im_start|>assistant\n{language_forcing}"
     ))
 
@@ -82,8 +100,8 @@ def to_chat_template_qwen_3(task):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
     close_thinking = '\n</think>\n'*('math' not in task)
     return (lambda x : (
-        f"<|im_start|>system\n{INSTRUCTIONS[task]}<|im_end|>\n"
-        f"<|im_start|>user\n{x}/{is_thinking}think<|im_end|>\n"
+        f"<|im_start|>system\n{SYSTEM_INSTRUCTIONS[task]}<|im_end|>\n"
+        f"<|im_start|>user\n{USER_INSTRUCTIONS[task]}{x}/{is_thinking}think<|im_end|>\n"
         f"<|im_start|>assistant\n<think>\n{language_forcing}{close_thinking}"
     ))
 
@@ -91,8 +109,8 @@ def to_chat_template_qwen_3(task):
 def to_chat_template_lucie(task):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
     return (lambda x : (
-        f"<s><|start_header_id|>system<|end_header_id|>You are a helpful assistant. {INSTRUCTIONS[task]}<|eot_id|>"
-        f"<|start_header_id|>user<|end_header_id|>{x}<|eot_id|>"
+        f"<s><|start_header_id|>system<|end_header_id|>You are a helpful assistant. {SYSTEM_INSTRUCTIONS[task]}<|eot_id|>"
+        f"<|start_header_id|>user<|end_header_id|>{USER_INSTRUCTIONS[task]}{x}<|eot_id|>"
         f"<|start_header_id|>assistant<|end_header_id|>{language_forcing}"
     ))
 
@@ -108,8 +126,8 @@ def to_chat_template_phi4(task):
     else:
         raise Exception("task not valid for this chat template")
     return (lambda x : (
-        f"<|system|>{introduction} {INSTRUCTIONS[task]}<|end|>"
-        f"<|user|>{x}<|end|>"
+        f"<|system|>{introduction} {SYSTEM_INSTRUCTIONS[task]}<|end|>"
+        f"<|user|>{USER_INSTRUCTIONS[task]}{x}<|end|>"
         f"<|assistant|>{language_forcing}"
     ))
 
@@ -118,7 +136,7 @@ def to_chat_template_deepseek(task):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
     start_thinking = "<think>\n"*("math" in task)
     return (lambda x : (
-        f"{x}\n{INSTRUCTIONS[task]}\n{start_thinking}{language_forcing}"
+        f"{USER_INSTRUCTIONS[task]}{x}\n{SYSTEM_INSTRUCTIONS[task]}\n{start_thinking}{language_forcing}"
     ))
 
 
@@ -127,7 +145,13 @@ def get_config(name, task="math", n=1, max_length=1000000):
     DEFAULT_CHAT_TEMPLATE = to_chat_template_qwen_2_5(task)
     DEFAULT_SAMPLING_PARAMS = SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=30, presence_penalty=0.5, max_tokens=min(32768, max_length), seed=0)
 
-    if name == "Qwen2.5-Math-7B-Instruct":
+    if name == "fasttext":
+        return (
+            "facebook/fasttext-language-identification",
+            (lambda x: x),
+            None,
+        )
+    elif name == "Qwen2.5-Math-7B-Instruct":
         return (
             "Qwen/Qwen2.5-Math-7B-Instruct",
             to_chat_template_qwen_2_5(task),
@@ -136,6 +160,18 @@ def get_config(name, task="math", n=1, max_length=1000000):
     elif name == "Qwen3-8B":
         return (
             "Qwen/Qwen3-8B",
+            to_chat_template_qwen_3(task),
+            SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=min(38912, max_length), seed=0)
+        )
+    elif name == "Qwen3-32B":
+        return (
+            "Qwen/Qwen3-32B",
+            to_chat_template_qwen_3(task),
+            SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=min(38912, max_length), seed=0)
+        )
+    elif name == "Qwen3-30B-A3B":
+        return (
+            "Qwen/Qwen3-30B-A3B",
             to_chat_template_qwen_3(task),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=min(38912, max_length), seed=0)
         )

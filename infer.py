@@ -9,12 +9,32 @@ from process_data.utils_data import *
 from math_verify import parse, verify   
 
 
+def classify(model, dataset, dataloader, output_name):
+    print("FM - Classifying")
+    outputs = []
+    for x in tqdm(dataloader):
+        output = model.predict([sample.replace("\n", " ") for sample in x], k=5)
+        outputs += output
+    print(f"\n\n\nLens:{[len(sample) for sample in x]},{[len(sample) for sample in output]}\n\nInputs:\n{x}\n\nOutputs:\n{output}\n\n\n")
+    print("FM - Classified")
+
+    dataset = dataset.add_column(
+        output_name, outputs
+    ).remove_columns(
+        ["chat_input", "input_length"]
+    )
+
+    return dataset
+
+    
 def infer(model, dataset, dataloader, output_name, sampling_params):
     print("FM - Infering")
     outputs = []
     for x in tqdm(dataloader):
         request_outputs = model.generate(x, sampling_params)
-        outputs += [request_output.outputs[0].text for request_output in request_outputs]
+        output = [request_output.outputs[0].text for request_output in request_outputs]
+        outputs += output
+        print(f"\n\n\nLens:{[len(sample) for sample in x]},{[len(sample) for sample in output]}\n\nInputs:\n{x}\n\nOutputs:\n{output}\n\n\n")
     print("FM - Infered")
 
     dataset = dataset.add_column(
@@ -47,6 +67,7 @@ if __name__ == "__main__":
     parser.add_argument('--task', type=str, default="translation", help='Task to prompt to the model')
     parser.add_argument('--input', type=str, default="question", help='Input to use for the task')
     parser.add_argument('--name', type=str, default=None, help='Name of the new dataset')
+    parser.add_argument('--batch-size', type=int, default=64, help='Batch size')
     args = parser.parse_args()
 
     model_path, chat_template_fun, sampling_params = get_config(args.model, task=args.task, n=1)
@@ -61,11 +82,11 @@ if __name__ == "__main__":
         )
     model = load_model(model_path, is_vllm=True)
 
-    dataset = load_data(args.dataset)
+    dataset = load_data(args.dataset).select(range(3))
     dataset, dataloader, _ = prepare_inference_data(
         dataset,
         chat_template_fun,
-        batch_size=64,
+        batch_size=args.batch_size,
         input_name=args.input + "_fr"*(args.task[-3:] == "_fr"),
         use_only_input=True
     )
@@ -79,10 +100,16 @@ if __name__ == "__main__":
     elif args.task == "math_fr":    
         output_name = "solution_fr_" + args.model
         new_dataset_name = args.dataset + "-Solved"
+    elif args.task == "language_classification":    
+        output_name = args.input + "_lang"
+        new_dataset_name = args.dataset + "-Lang"
     if args.name:
         new_dataset_name = args.name
 
-    dataset = infer(model, dataset, dataloader, output_name, sampling_params)
+    if args.model == "fasttext":
+        dataset = classify(model, dataset, dataloader, output_name)
+    else:
+        dataset = infer(model, dataset, dataloader, output_name, sampling_params)
 
     print("FM - Saving")
     dataset.save_to_disk(config.DATA_PATHS[2] + new_dataset_name)

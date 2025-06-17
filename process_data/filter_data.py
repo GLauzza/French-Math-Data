@@ -162,5 +162,7 @@ def filter_train_math_fr(dataset):
     dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 512))
     # Invalid solution
     dataset = dataset.filter(lambda x: x["valid"])
+    # Not French
+    dataset = dataset.filter(lambda x : x["solution_lang"][0] == "fra_Latn" and x["solution_lang"][1] > 0.95)
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
