@@ -156,13 +156,17 @@ def filter_train_math_fr(dataset):
     n_samples = dataset.num_rows
     # Question too short/long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 512))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     # Solution too long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 16384))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     # Answer too long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 512))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     # Invalid solution
     dataset = dataset.filter(lambda x: x["valid"])
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     # Not French
-    dataset = dataset.filter(lambda x : x["solution_lang"][0] == "fra_Latn" and x["solution_lang"][1] > 0.95)
+    dataset = dataset.filter(lambda x : x["solution_fr_lang"][0] == "__label__fra_Latn" and x["solution_fr_lang_prob"][0] > 0.95)
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset

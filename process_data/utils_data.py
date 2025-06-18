@@ -161,10 +161,11 @@ def prepare_inference_data(dataset, chat_template_fun, batch_size, input_name="q
     )
     dataset = dataset.add_column(
         "input_length",
-        [len(question) for question in dataset["question"]]
+        [len(question) for question in dataset[input_name]]
     )
     dataset = dataset.sort("input_length")
     sources = set(dataset["source"])
+    dataset = dataset.select(range(30000,30064))
 
     if use_only_input:
         dataloader = torch.utils.data.DataLoader(dataset["chat_input"], batch_size=batch_size, shuffle=False)

@@ -11,15 +11,19 @@ from math_verify import parse, verify
 
 def classify(model, dataset, dataloader, output_name):
     print("FM - Classifying")
-    outputs = []
+    outputs_lang = []
+    outputs_prob = []
     for x in tqdm(dataloader):
         output = model.predict([sample.replace("\n", " ") for sample in x], k=5)
-        outputs += output
-    print(f"\n\n\nLens:{[len(sample) for sample in x]},{[len(sample) for sample in output]}\n\nInputs:\n{x}\n\nOutputs:\n{output}\n\n\n")
+        outputs_lang += output[0]
+        outputs_prob += output[1]
+        print(f"\n\n\nInputs:\n{x}\n\nOutputs_lang:\n{output[0]}\n\nOutputs_prob:\n{output[1]}\n\n\n")
     print("FM - Classified")
 
     dataset = dataset.add_column(
-        output_name, outputs
+        output_name, outputs_lang
+    ).add_column(
+        output_name+"_prob", outputs_prob
     ).remove_columns(
         ["chat_input", "input_length"]
     )
@@ -82,7 +86,7 @@ if __name__ == "__main__":
         )
     model = load_model(model_path, is_vllm=True)
 
-    dataset = load_data(args.dataset).select(range(3))
+    dataset = load_data(args.dataset)
     dataset, dataloader, _ = prepare_inference_data(
         dataset,
         chat_template_fun,
