@@ -37,8 +37,8 @@ if __name__ == "__main__":
 
     dataset = load_data(args.dataset)
 
-    output_path = config.DATA_PATHS[2] + args.dataset + "-NEMO"
+    output_path = config.DATA_PATHS[1] + args.dataset + "-NEMO"
     
     hf_to_nemo(dataset, output_path, chat_template_fun, tokenizer)
 
-    shutil.copytree(output_path, config.DATA_PATHS[1] + args.dataset + "-NEMO", dirs_exist_ok=True)
+    shutil.copytree(output_path, config.DATA_PATHS[2] + args.dataset + "-NEMO", dirs_exist_ok=True)

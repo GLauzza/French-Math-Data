@@ -26,16 +26,16 @@ echo "SLURM: ----------------- CREATING COT / EVAL -----------------------"
 srun python ./create_datasets.py --datasets Fused-CoT Eval-Math-FR
 
 echo "SLURM: ---------------- TRANSLATING QUESTION -----------------------"
-srun python ./infer.py --model Qwen3-32B --dataset Fused-CoT --task translation --input question --name Fused-CoT-FR --batch-size 1
+srun python ./infer.py --model Qwen3-32B --dataset Fused-CoT --task translation --input question --name Fused-CoT-FR --batch-size 64
 
 
 
 
 # echo "SLURM: ----------------------- SOLVING -----------------------------"
-# srun python ./infer.py --model Qwen3-32B --dataset Fused-CoT-FR --task math_fr --name Fused-CoT-FR-Solved --batch-size 1
+# srun python ./infer.py --model Qwen3-32B --dataset Fused-CoT-FR --task math_fr --input question_fr --name Fused-CoT-FR-Solved --batch-size 64
 
 # echo "SLURM: ---------------- CLASSIFYING LANGUAGE -----------------------"
-# srun python ./infer.py --model fasttext --dataset Fused-CoT-FR-Solved --task language_classification --input solution_fr_Qwen3-8B --name Raw-Train-Math-FR --batch-size 1
+# srun python ./infer.py --model fasttext --dataset Fused-CoT-FR-Solved --task language_classification --input solution_fr_Qwen3-8B --name Raw-Train-Math-FR --batch-size 64
 
 # echo "SLURM: ----------------- CREATING TRAIN DATA -----------------------"
 # srun python ./create_datasets.py --datasets Train-Math-FR --model Qwen3-32B
@@ -43,10 +43,10 @@ srun python ./infer.py --model Qwen3-32B --dataset Fused-CoT --task translation 
 # OR
 
 echo "SLURM: ---------------- TRANSLATING SOLUTION -----------------------"
-srun python ./infer.py --model Qwen3-32B --dataset Fused-CoT-FR --task translation --input solution --name Fused-CoT-FR-Solved --batch-size 1
+srun python ./infer.py --model Qwen3-32B --dataset Fused-CoT-FR --task translation --input solution --name Fused-CoT-FR-Solved --batch-size 64
 
 echo "SLURM: ---------------- CLASSIFYING LANGUAGE -----------------------"
-srun python ./infer.py --model fasttext --dataset Fused-CoT-FR-Solved --task language_classification --input solution_fr --name Raw-Train-Math-FR --batch-size 1
+srun python ./infer.py --model fasttext --dataset Fused-CoT-FR-Solved --task language_classification --input solution_fr --name Raw-Train-Math-FR --batch-size 64
 
 echo "SLURM: ----------------- CREATING TRAIN DATA -----------------------"
 srun python ./create_datasets.py --datasets Train-Math-FR

@@ -34,10 +34,10 @@ def train(model, tokenizer, dataset, new_model_name):
         optim = "adamw_bnb_8bit",
         weight_decay = 0.01,
         lr_scheduler_type = "linear",
-        output_dir = config.MODEL_PATHS[2] + new_model_name,
+        output_dir = config.MODEL_PATHS[1] + new_model_name,
         report_to = "tensorboard",
         save_safetensors=False,
-        logging_dir=config.MODEL_PATHS[2] + new_model_name + "/logs",
+        logging_dir=config.MODEL_PATHS[1] + new_model_name + "/logs",
         seed=0,
         use_liger_kernel=True,
         max_length=128,
@@ -82,12 +82,12 @@ if __name__ == "__main__":
     if args.name:
         new_model_name = args.name
     else:
-        new_model_name = config.MODEL_PATHS[2] + args.model + "-SFT-" + args.dataset
+        new_model_name = config.MODEL_PATHS[1] + args.model + "-SFT-" + args.dataset
 
     train(model, tokenizer, dataset, new_model_name)
 
     print("FM - Saving")
-    model.save_pretrained(config.MODEL_PATHS[2] + new_model_name, safe_serialization=False)
-    tokenizer.save_pretrained(config.MODEL_PATHS[2] + new_model_name)
-    shutil.copytree(config.MODEL_PATHS[2] + new_model_name, config.MODEL_PATHS[1] + new_model_name, dirs_exist_ok=True)
+    model.save_pretrained(config.MODEL_PATHS[1] + new_model_name, safe_serialization=False)
+    tokenizer.save_pretrained(config.MODEL_PATHS[1] + new_model_name)
+    shutil.copytree(config.MODEL_PATHS[1] + new_model_name, config.MODEL_PATHS[2] + new_model_name, dirs_exist_ok=True)
     print("FM - Saved")

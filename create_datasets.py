@@ -173,8 +173,8 @@ if __name__ == "__main__":
         ]
         fused_cot = fusion_datasets(cot_datasets)
         fused_cot = fused_cot.filter(lambda x: x["solution"] is not None)
-        fused_cot.save_to_disk(config.DATA_PATHS[2] + "Fused-CoT")
         fused_cot.save_to_disk(config.DATA_PATHS[1] + "Fused-CoT")
+        fused_cot.save_to_disk(config.DATA_PATHS[2] + "Fused-CoT")
 
     if "Eval-Math-FR" in args.datasets:
         math_lvl5_fr_test = load_data("le-leadboard/MATH_LVL5_fr", split="test")
@@ -194,7 +194,7 @@ if __name__ == "__main__":
         mclm = Dataset.from_dict(mclm)
 
         mgsm = Dataset.from_pandas(pd.read_csv(
-            config.DATA_PATHS[1]+"MGSM/mgsm_fr.tsv", sep="\t", header=None, names=["question", "answer"]
+            config.DATA_PATHS[2]+"MGSM/mgsm_fr.tsv", sep="\t", header=None, names=["question", "answer"]
         ))
 
         msvamp = load_data("Mathoctopus/MSVAMP", split="test")
@@ -239,8 +239,8 @@ if __name__ == "__main__":
             }
         ]
         eval_math_fr = fusion_datasets(eval_math_fr_datasets)
-        eval_math_fr.save_to_disk(config.DATA_PATHS[2] + "Eval-Math-FR")
         eval_math_fr.save_to_disk(config.DATA_PATHS[1] + "Eval-Math-FR")
+        eval_math_fr.save_to_disk(config.DATA_PATHS[2] + "Eval-Math-FR")
 
     if "Train-Math-FR" in args.datasets:
         model_ext = "_"*(len(args.model) > 0) + args.model
@@ -258,6 +258,6 @@ if __name__ == "__main__":
 
         train_math_fr = filter_train_math_fr(train_math_fr)
 
-        train_math_fr.save_to_disk(config.DATA_PATHS[2] + "Train-Math-FR")
         train_math_fr.save_to_disk(config.DATA_PATHS[1] + "Train-Math-FR")
+        train_math_fr.save_to_disk(config.DATA_PATHS[2] + "Train-Math-FR")
 

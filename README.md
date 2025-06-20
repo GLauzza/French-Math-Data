@@ -21,26 +21,25 @@ You can explore those results using the ```plot_eval.ipynb``` notebook.
 - [ ] handle fact that am deepseek distill contains non math interesting data (llama-nemotron)
 - [ ] filter too easy according to Lucie
 - [ ] filter sources we don't want
-- [ ] put hyperparams of filters in config
 - [ ] keep categories features of some datasets
 - [ ] handle openr1 finish reason, s1 cot type, numina/openr1 question type filtering
-- [ ] evaluate if answer length / question lenght / CoT length is correlated with accuracy
 - [ ] format the training data such that CoT ends by \\boxed{}
-- [ ] do I need to train to predict end of text token ?
-- [ ] add custom response template
 - [ ] add SFT checkpointing
 - [ ] see if math verify not supporting french is a problem
 - [ ] check how NEMO handles chat templates for finetuning
 - [ ] think on how to pad during training (padding free doesn't work with custom datacollator)
 - [ ] fix eval of n samples (not sure about the output format)
-- [ ] qwen3 disable thinking for translation
 - [ ] add variable chat templates depending on config type
-- [ ] add answer and training on french dataset (check if answers need to be translated)
 - [ ] add language forcing
-- [ ] do we keep learning signal from failed samples (contrastive / imitating RL with SFT)
 - [ ] check extraction of boxed works perfectly
 - [ ] get sampling params this way: "Default sampling parameters have been overridden by the model's Hugging Face generation config recommended from the model creator. If this is not intended, please relaunch vLLM instance with `--generation-config vllm`"
-- [ ] comment gerer les balises think ?
 - [ ] budget control
 - [ ] redecouper les eval sur Qwen3-8B qui depassent 
 - [ ] add latex removing before fasttext
+- [ ] check for links in dataset (I found images)
+- [ ] should I translate answers ?
+- [ ] check if tokenizer pad left is good
+
+### Questions
+- [ ] comment gerer les balises think ?
+- [ ] do we keep learning signal from failed samples (contrastive / imitating RL with SFT) ?

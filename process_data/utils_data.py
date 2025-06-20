@@ -153,20 +153,26 @@ def to_latex(text):
     return "$" + remove_str(base_text) + "$"
 
 
-def prepare_inference_data(dataset, chat_template_fun, batch_size, input_name="question", use_only_input=False):
+def prepare_inference_data(dataset, chat_template_fun, batch_size=-1, input_name="question", use_only_input=False, sortby=None):
     print("FM - Preparing Data")
+    if not sortby:
+        sortby = input_name
     dataset = dataset.add_column(
         "chat_input",
         [chat_template_fun(question) for question in dataset[input_name]]
     )
     dataset = dataset.add_column(
-        "input_length",
-        [len(question) for question in dataset[input_name]]
+        "length",
+        # [len(x) for x in dataset[sortby]]
+        [len(x) for x in dataset["solution"]]
     )
-    dataset = dataset.sort("input_length")
+    dataset = dataset.sort("length")
     sources = set(dataset["source"])
-    dataset = dataset.select(range(30000,30064))
+    if len(dataset) > 10000:
+        dataset = dataset.select(range(10000,10512))
 
+    if batch_size == -1:
+        batch_size = len(dataset)
     if use_only_input:
         dataloader = torch.utils.data.DataLoader(dataset["chat_input"], batch_size=batch_size, shuffle=False)
     else:

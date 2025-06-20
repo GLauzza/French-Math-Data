@@ -7,6 +7,7 @@ from vllm.distributed.parallel_state import destroy_model_parallel, destroy_dist
 import fasttext
 
 import config
+from quantize import quantize
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -45,33 +46,49 @@ def load_model(model_path, is_vllm=False):
     if model_path == "facebook/fasttext-language-identification":
         return fasttext.load_model(config.MODEL_PATHS[0]+model_path+"/model.bin")
     elif is_vllm:
-        try:
-            model = LLM(
-                config.MODEL_PATHS[0]+model_path, 
-                dtype=torch.bfloat16,
-                trust_remote_code=True,
-                quantization="bitsandbytes",
-                # kv_cache_dtype="fp8",
-                # calculate_kv_scales=True
-            )
-        except:
-            model = LLM(
-                config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
-                dtype=torch.bfloat16,
-                trust_remote_code=True,
-                quantization="bitsandbytes",
-                # kv_cache_dtype="fp8",
-                # calculate_kv_scales=True
-            )
+        # try:
+        #     model = LLM(
+        #         config.MODEL_PATHS[0]+model_path, 
+        #         # dtype=torch.bfloat16,
+        #         # trust_remote_code=True,
+        #         # quantization="bitsandbytes",
+        #         # quantization="AWQ",
+        #         # kv_cache_dtype="fp8",
+        #         # calculate_kv_scales=True
+        #     )
+        # except:
+        #     try:
+        model = LLM(
+            config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
+            # dtype=torch.bfloat16,
+            # trust_remote_code=True,
+            # quantization="bitsandbytes",
+            # quantization="AWQ",
+            # kv_cache_dtype="fp8",
+            # calculate_kv_scales=True
+        )
+            # except:
+            #     model = LLM(
+            #         config.MODEL_PATHS[2]+(model_path.split("/")[-1]), 
+            #         # dtype=torch.bfloat16,
+            #         # trust_remote_code=True,
+            #         # quantization="bitsandbytes",
+            #         # quantization="AWQ",
+            #         # kv_cache_dtype="fp8",
+            #         # calculate_kv_scales=True
+            #     )
         print("FM - Loaded Model:", model_path)
         return model
     else:
         try:
-            tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[0]+model_path, padding_side='left')
             model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_map=device)
         except:
-            tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), padding_side='left')
-            model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_map=device)
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), padding_side='left')
+                model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_map=device)
+            except:
+                tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), padding_side='left')
+                model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), device_map=device)
         print("FM - Loaded Model:", model_path)
         return model, tokenizer
 
@@ -158,14 +175,23 @@ def get_config(name, task="math", n=1, max_length=1000000):
             DEFAULT_SAMPLING_PARAMS
         )
     elif name == "Qwen3-8B":
-        return (
+        return ( 
             "Qwen/Qwen3-8B",
             to_chat_template_qwen_3(task),
-            SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=min(38912, max_length), seed=0)
+            SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, pres    ence_penalty=0.5, max_tokens=min(38912, max_length), seed=0)
         )
     elif name == "Qwen3-32B":
+        quantize(config.MODEL_PATHS[0]+"Qwen/Qwen3-32B", config.MODEL_PATHS[1]+"Qwen3-32B-quantized", "tensorRT")
         return (
-            "Qwen/Qwen3-32B",
+            # "Qwen/Qwen3-32B",
+            # "Qwen/Qwen3-32B-AWQ",
+            # "Qwen/Qwen3-32B-bnb-4bit",
+            # "Qwen/Qwen3-32B-unsloth-bnb-4bit", # Unsupported in vllm yet
+            # "Qwen/Qwen3-32B-GPTQ-Int4",
+            # "Qwen/Qwen3-32B-FP8-dynamic",
+            # "Qwen/Qwen3-32B-quantized.w4a16", # Doesn't work
+            # "Qwen/Qwen3-32B.w8a8",
+            "Qwen/Qwen3-32B-quantized",
             to_chat_template_qwen_3(task),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=min(38912, max_length), seed=0)
         )

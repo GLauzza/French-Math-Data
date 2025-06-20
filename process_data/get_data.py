@@ -10,14 +10,14 @@ import config
 
 
 def get_huggingface_data(repo_id, allow_patterns):
-    output_path = config.DATA_PATHS[2] + repo_id.split("/")[-1]
+    output_path = config.DATA_PATHS[1] + repo_id.split("/")[-1]
     snapshot_download(
         repo_id=repo_id,
         local_dir=output_path,
         repo_type="dataset",
         allow_patterns=allow_patterns
     )
-    shutil.copytree(output_path, config.DATA_PATHS[1] + repo_id.split("/")[-1], dirs_exist_ok=True)
+    shutil.copytree(output_path, config.DATA_PATHS[2] + repo_id.split("/")[-1], dirs_exist_ok=True)
 
 
 def get_am_deepseek_distill():
@@ -55,6 +55,8 @@ def get_metamath_qa():
 def get_mgsm():
     os.system("mkdir " + config.DATA_PATHS[1] + "MGSM")
     os.system("wget https://raw.githubusercontent.com/google-research/url-nlp/refs/heads/main/mgsm/mgsm_fr.tsv -O " + config.DATA_PATHS[1] + "MGSM/mgsm_fr.tsv") # ~60KB
+    os.system("mkdir " + config.DATA_PATHS[2] + "MGSM")
+    os.system("wget https://raw.githubusercontent.com/google-research/url-nlp/refs/heads/main/mgsm/mgsm_fr.tsv -O " + config.DATA_PATHS[2] + "MGSM/mgsm_fr.tsv") # ~60KB
 
 
 def get_msvamp():

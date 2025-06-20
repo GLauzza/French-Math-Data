@@ -44,7 +44,7 @@ def infer(model, dataset, dataloader, output_name, sampling_params):
     dataset = dataset.add_column(
         output_name, outputs
     ).remove_columns(
-        ["chat_input", "input_length"]
+        ["chat_input", "length"]
     )
 
     if "solution" in output_name:
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument('--task', type=str, default="translation", help='Task to prompt to the model')
     parser.add_argument('--input', type=str, default="question", help='Input to use for the task')
     parser.add_argument('--name', type=str, default=None, help='Name of the new dataset')
-    parser.add_argument('--batch-size', type=int, default=64, help='Batch size')
+    parser.add_argument('--batch-size', type=int, default=-1, help='Batch size')
     args = parser.parse_args()
 
     model_path, chat_template_fun, sampling_params = get_config(args.model, task=args.task, n=1)
@@ -91,8 +91,9 @@ if __name__ == "__main__":
         dataset,
         chat_template_fun,
         batch_size=args.batch_size,
-        input_name=args.input + "_fr"*(args.task[-3:] == "_fr"),
-        use_only_input=True
+        input_name=args.input,
+        use_only_input=True,
+        sortby=("solution" if ("solution" in args.input) or ("math" in args.task) else None)
     )
 
     if args.task == "translation":
@@ -116,6 +117,6 @@ if __name__ == "__main__":
         dataset = infer(model, dataset, dataloader, output_name, sampling_params)
 
     print("FM - Saving")
-    dataset.save_to_disk(config.DATA_PATHS[2] + new_dataset_name)
-    shutil.copytree(config.DATA_PATHS[2] + new_dataset_name, config.DATA_PATHS[1] + new_dataset_name, dirs_exist_ok=True)
+    dataset.save_to_disk(config.DATA_PATHS[1] + new_dataset_name)
+    shutil.copytree(config.DATA_PATHS[1] + new_dataset_name, config.DATA_PATHS[2] + new_dataset_name, dirs_exist_ok=True)
     print("FM - Saved")
