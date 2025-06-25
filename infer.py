@@ -78,12 +78,22 @@ if __name__ == "__main__":
     if args.task == "translation":
         sampling_params = SamplingParams(
             temperature=0.5,
+            top_p=0.8,
+            top_k=10,
+            min_p=0,
+            max_tokens=(32768 if args.input == "solution" else 1024),
+            seed=0
+        )
+    elif args.task == "topic":
+        sampling_params = SamplingParams(
+            temperature=0.5,
             top_p=0.8, 
             top_k=10, 
             min_p=0, 
-            max_tokens=(32768 if args.input == "solution" else 1024),    
+            max_tokens=64,
             seed=0
         )
+
     model = load_model(model_path, is_vllm=True)
 
     dataset = load_data(args.dataset)
@@ -97,19 +107,21 @@ if __name__ == "__main__":
     )
 
     if args.task == "translation":
-        output_name = args.input + "_fr"
-        new_dataset_name = args.dataset + "-FR"
-    elif args.task == "math":
-        output_name = "solution" + args.model
-        new_dataset_name = args.dataset + "-Solved"
-    elif args.task == "math_fr":    
-        output_name = "solution_fr_" + args.model
-        new_dataset_name = args.dataset + "-Solved"
+        output_ext = "fr"
+        new_dataset_ext = "FR"
+    elif args.task == "math" or args.task == "math_fr":
+        output_ext = args.model
+        new_dataset_ext = "Solved"
     elif args.task == "language_classification":    
-        output_name = args.input + "_lang"
-        new_dataset_name = args.dataset + "-Lang"
+        output_ext = "lang"
+        new_dataset_ext = "Lang"
+    elif args.task == "topic":    
+        output_ext = "topic"
+        new_dataset_ext = "Topic"
     if args.name:
         new_dataset_name = args.name
+    output_name = args.input + "_" + output_ext
+    new_dataset_name = args.dataset + "-" + new_dataset_ext
 
     if args.model == "fasttext":
         dataset = classify(model, dataset, dataloader, output_name)

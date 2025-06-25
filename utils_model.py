@@ -7,7 +7,7 @@ from vllm.distributed.parallel_state import destroy_model_parallel, destroy_dist
 import fasttext
 
 import config
-# from quantize import quantize
+from quantize import quantize
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -20,18 +20,25 @@ os.environ["TORCHDYNAMO_VERBOSE"] = "1"
 os.environ["TORCH_LOGS"]="+dynamo"
 
 SYSTEM_INSTRUCTIONS = {
-    "math": "Please reason step by step, and put your final answer within \\boxed{}.",
+    "math": (
+        "Please reason step by step, and put your final answer within \\boxed{}."
+    ),
     "math_fr": (
         "S'il-te-plaît raisonne étape par étape, et écrit ta réponse finale à l'intérieur de \\boxed{}."
         "Tu doit penser et répondre uniquement en français."
     ),
     "translation": (
         ""
-    )
+    ),
+    "topic": (
+        ""
+    ),
 }
 
 USER_INSTRUCTIONS = {
-    "math": "",
+    "math": (
+        ""
+    ),
     "math_fr": (
         ""
     ),
@@ -41,7 +48,13 @@ USER_INSTRUCTIONS = {
         "Don't summarize."
         "Preserve any mathematical formula formatting.\n"
         "Text:\n"
-    )
+    ),
+    "topic": (
+        "Please classify the math topics of the following text."
+        "Only output the topics as a single list separated by commas."
+        "The text should be classified into 1 to 10 topics."
+        "(e.g 'Linear Algebra, Inequalities, Computer Science, Projections')"
+    ),
 }
 
 
@@ -140,7 +153,7 @@ def to_chat_template_lucie(task):
 
 def to_chat_template_phi4(task):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
-    if task == "math":
+    if task == "math" or task == "topic":
         introduction = "Your name is Phi, an AI math expert developed by Microsoft."
     elif task == "math_fr":
         introduction = "Ton nom est Phi, une IA experte en math françaises développée par Microsoft."
