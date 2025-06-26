@@ -63,6 +63,6 @@ srun python ./train.py --model Qwen3-8B --dataset Train-Math-FR
 # srun accelerate launch --config_file ./deepspeed.yaml ./train.py --model Qwen3-8B --dataset Train-Math-FR
 
 echo "SLURM: --------------------- EVALUATING ----------------------------"
-srun python ./eval.py --models Qwen3-8B --dataset Eval-Math-FR
+srun python ./eval.py --models Qwen3-8B --dataset Eval-Math-FR --batch-size -1
 
 

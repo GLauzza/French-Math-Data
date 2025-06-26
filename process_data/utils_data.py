@@ -163,8 +163,8 @@ def prepare_inference_data(dataset, chat_template_fun, batch_size=-1, input_name
     )
     dataset = dataset.add_column(
         "length",
-        # [len(x) for x in dataset[sortby]]
-        [len(x) for x in dataset["solution"]]
+        [len(x) for x in dataset[sortby]]
+        # [len(x) for x in dataset["solution"]]
     )
     dataset = dataset.sort("length")
     sources = set(dataset["source"])
