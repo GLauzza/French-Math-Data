@@ -3,8 +3,9 @@ import os
 from transformers import AutoTokenizer
 
 # Local
-# DATA_PATHS = ["./Datasets/", "./Datasets/", "./Datasets/"]
-# MODEL_PATHS = ["./Models/", "./Models/", "./Models/"]
+# parent = os.path.dirname(os.path.realpath(__file__))
+# DATA_PATHS = [parent+"/Datasets/", parent+"/Datasets/", parent+"/Datasets/"]
+# MODEL_PATHS = [parent+"/Models/", parent+"/Models/", parent+"/Models/"]
 # TOKENIZER = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
 
 # Jean Zay
