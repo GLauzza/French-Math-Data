@@ -16,23 +16,22 @@ from utils_model import *
 def hf_to_nemo(dataset, output_path, chat_template_fun, tokenizer):
     print("FM - Converting Dataset to Nemo")
     os.makedirs(output_path, exist_ok=True) 
-    with open(output_path + "/training.jsonl", "w") as f:
+    with open(output_path + "/training.jsonl", "w", encoding="utf-8") as f:
         for sample in tqdm(dataset):
-            json.dump({
+            f.write(json.dumps({
                 "input": chat_template_fun(sample["question"]),
                 "output": sample["solution"] + tokenizer.eos_token,
-            }, f)
-            f.write("\n")
+            }) + "\n")
     print("FM - Dataset Converted to Nemo")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Transform a dataset from Huggingface format to Nemo finetuning format')
-    parser.add_argument('--model', type=str, default="Qwen2.5-Math-7B-Instruct", help='Model to use for chat template')
+    parser.add_argument('--model', type=str, default="Qwen3-8B", help='Model to use for chat template')
     parser.add_argument('--dataset', type=str, default="Fused-CoT", help='Dataset to transform')
     args = parser.parse_args()
 
-    model_path, chat_template_fun, _ = get_config(args.model)
+    model_path, chat_template_fun, _ = get_config(args.model, task="math")
     model, tokenizer = load_model(model_path)
 
     dataset = load_data(args.dataset)

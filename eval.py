@@ -29,7 +29,8 @@ def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_si
         output_ids = [request_output.outputs[0].token_ids for request_output in request_outputs]
         output_texts = [request_output.outputs[0].text for request_output in request_outputs]
         for input_text, output_id, output_text, answer, source in zip(x["chat_input"], output_ids, output_texts, x["answer"], x["source"]):
-            pred = to_latex(extract_boxed_text(output_text))
+            #pred = to_latex(extract_boxed_text(output_text))
+            pred = output_text
             answer = to_latex(answer)
             parsed_pred = parse(pred)
             parsed_answer = parse(answer)

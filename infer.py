@@ -2,11 +2,14 @@ import shutil
 import argparse
 
 from tqdm import tqdm
+from vllm import SamplingParams
+from vllm.sampling_params import GuidedDecodingParams
+from math_verify import parse, verify   
 
 import config
 from utils_model import *
 from process_data.utils_data import *
-from math_verify import parse, verify   
+from topic import *
 
 
 def classify(model, dataset, dataloader, output_name):
@@ -91,7 +94,8 @@ if __name__ == "__main__":
             top_k=10, 
             min_p=0, 
             max_tokens=64,
-            seed=0
+            seed=0,
+            guided_decoding=GuidedDecodingParams(grammar=get_topic_grammar())
         )
 
     model = load_model(model_path, is_vllm=True)

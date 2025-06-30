@@ -104,6 +104,7 @@ def load_model(model_path, is_vllm=False):
         return model
     else:
         try:
+            tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[0]+model_path, padding_side='left')
             model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_map=device)
         except:
             try:
@@ -191,6 +192,20 @@ def get_config(name, task="math", n=1, max_length=1000000):
             (lambda x: x),
             None,
         )
+    elif name == "Qwen2.5-Math-1.5B":
+        return (
+            "Qwen/Qwen2.5-Math-1.5B",
+            to_chat_template_qwen_2_5(task),
+            DEFAULT_SAMPLING_PARAMS
+        )
+
+    elif name == "Qwen2.5-7B":
+        return (
+            "Qwen/Qwen2.5-7B",
+            to_chat_template_qwen_2_5(task),
+            DEFAULT_SAMPLING_PARAMS
+        )
+
     elif name == "Qwen2.5-Math-7B-Instruct":
         return (
             "Qwen/Qwen2.5-Math-7B-Instruct",

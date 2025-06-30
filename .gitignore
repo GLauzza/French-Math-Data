@@ -10,3 +10,6 @@ __pycache__/
 
 # Evaluation
 eval.json
+
+# Topics
+MSC_2020.csv
