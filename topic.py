@@ -4,7 +4,7 @@ import config
 
 
 def get_topics():
-    continue
+    pass
   
 
 def get_topic_grammar():

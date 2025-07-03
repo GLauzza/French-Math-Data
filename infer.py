@@ -37,7 +37,11 @@ def classify(model, dataset, dataloader, output_name):
 def infer(model, dataset, dataloader, output_name, sampling_params):
     print("FM - Infering")
     outputs = []
-    for x in tqdm(dataloader):
+    for data in tqdm(dataloader):
+        if "chat_input" in data:
+            x = data["chat_input"]
+        else:
+            x = data
         request_outputs = model.generate(x, sampling_params)
         output = [request_output.outputs[0].text for request_output in request_outputs]
         outputs += output
@@ -50,20 +54,22 @@ def infer(model, dataset, dataloader, output_name, sampling_params):
         ["chat_input", "length"]
     )
 
-    if "solution" in output_name:
-        pred_ext = output_name.split("solution")[-1]
-        dataset = dataset.add_column(
-            "answer" + pred_ext,
-            [extract_boxed_text(solution) for solution in dataset[output_name]]
-        )
-        dataset = dataset.add_column(
-            "valid" + pred_ext,
-            [
-                verify(parse(to_latex(answer)), parse(to_latex(pred)))
-                for answer, pred in zip(dataset["answer"], dataset["answer" + pred_ext])
-            ]
-        )
+    return dataset
 
+
+def extract_answer(dataset, output_name):
+    pred_ext = output_name.split("solution")[-1]
+    dataset = dataset.add_column(
+        "answer" + pred_ext,
+        [extract_boxed_text(solution) for solution in dataset[output_name]]
+    )
+    dataset = dataset.add_column(
+        "valid" + pred_ext,
+        [
+            verify(parse(to_latex(answer)), parse(to_latex(pred)))
+            for answer, pred in zip(dataset["answer"], dataset["answer" + pred_ext])
+        ]
+    )
     return dataset
 
 
@@ -75,6 +81,7 @@ if __name__ == "__main__":
     parser.add_argument('--input', type=str, default="question", help='Input to use for the task')
     parser.add_argument('--name', type=str, default=None, help='Name of the new dataset')
     parser.add_argument('--batch-size', type=int, default=-1, help='Batch size')
+    parser.add_argument('--chunking', action="store_true", default=False, help='Perform task on chunks of input')
     args = parser.parse_args()
 
     model_path, chat_template_fun, sampling_params = get_config(args.model, task=args.task, n=1)
@@ -100,14 +107,15 @@ if __name__ == "__main__":
 
     model = load_model(model_path, is_vllm=True)
 
-    dataset = load_data(args.dataset)
+    raw_dataset = load_data(args.dataset).select(range(10))
     dataset, dataloader, _ = prepare_inference_data(
-        dataset,
+        raw_dataset,
         chat_template_fun,
         batch_size=args.batch_size,
         input_name=args.input,
         use_only_input=True,
-        sortby=("solution" if ("solution" in args.input) or ("math" in args.task) else None)
+        sortby=("solution" if ("math" in args.task) else args.input),
+        chunking=args.chunking
     )
 
     if args.task == "translation":
@@ -131,6 +139,16 @@ if __name__ == "__main__":
         dataset = classify(model, dataset, dataloader, output_name)
     else:
         dataset = infer(model, dataset, dataloader, output_name, sampling_params)
+
+    if args.chunking:
+        dataset = dataset.sort("id")
+        dataset = raw_dataset.add_column(
+            output_name,
+            regroup_chunks(dataset, output_name)
+        )
+
+    if "solution" in output_name:
+        dataset = extract_answer(dataset, output_name)
 
     print("FM - Saving")
     dataset.save_to_disk(config.DATA_PATHS[1] + new_dataset_name)

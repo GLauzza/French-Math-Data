@@ -143,18 +143,53 @@ def remove_str(text):
         return text
 
 def to_latex(text):
-    base_text = text
+    if text is None:
+        return "$$"
     if len(text) >= 2 and ((text[0] == "$" and text[-1] == "$") or (text[0] == "[" and text[-1] == "]")):
         base_text = text[1:-1]
     elif len(text) >= 4 and ((text[:2] == "\\[" and text[-2:] == "\\]") or (text[:2] == "\\(" and text[-2:] == "\\)")):
         base_text = text[2:-2]
     elif len(text) >= 8 and ((text[:7] == "\\boxed{" and text[-1] == "}")):
         base_text = text[7:-1]
+    else:
+        base_text = text
     return "$" + remove_str(base_text) + "$"
 
 
-def prepare_inference_data(dataset, chat_template_fun, batch_size=-1, input_name="question", use_only_input=False, sortby=None):
+def chunk(data):
+    sentences = data.split(".")
+    return [chunk + "."*(i != len(sentences)-1) for i, chunk in enumerate(sentences)]
+
+
+def chunk_batch(data):
+    chunked = [chunk(sample) for sample in data]
+    flattened_chunks = [chunk for chunks in chunked for chunk in chunks]    
+    chunk_ids = [i for i, chunks in enumerate(chunked) for chunk in chunks]   
+    return flattened_chunks, chunk_ids
+
+
+def regroup_chunks(dataset, output_name):
+    dechunked = [""]
+    curr_chunk_id = 0
+    for chunk, chunk_id in zip(dataset[output_name], dataset["chunk_id"]):
+        if curr_chunk_id == chunk_id:
+            dechunked[-1] += chunk
+        else:
+            dechunked.append(chunk)
+            curr_chunk_id = chunk_id
+    return dechunked
+
+
+def prepare_inference_data(dataset, chat_template_fun, batch_size=-1, input_name="question", use_only_input=False, sortby=None, chunking=False):
     print("FM - Preparing Data")
+    if chunking:
+        use_only_input=False
+        flattened_chunks, chunk_ids = chunk_batch(dataset[input_name])
+        dataset = Dataset.from_dict({
+            input_name: flattened_chunks,
+            "chunk_id": chunk_ids,
+            "id": list(range(len(flattened_chunks))),
+        })
     if not sortby:
         sortby = input_name
     dataset = dataset.add_column(
@@ -164,12 +199,8 @@ def prepare_inference_data(dataset, chat_template_fun, batch_size=-1, input_name
     dataset = dataset.add_column(
         "length",
         [len(x) for x in dataset[sortby]]
-        # [len(x) for x in dataset["solution"]]
     )
     dataset = dataset.sort("length")
-    sources = set(dataset["source"])
-    if len(dataset) > 10000:
-        dataset = dataset.select(range(10000,10512))
 
     if batch_size == -1:
         batch_size = len(dataset)
@@ -177,6 +208,10 @@ def prepare_inference_data(dataset, chat_template_fun, batch_size=-1, input_name
         dataloader = torch.utils.data.DataLoader(dataset["chat_input"], batch_size=batch_size, shuffle=False)
     else:
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
+
+    sources = None
+    if "source" in dataset:
+        sources = set(dataset["source"])
 
     print("FM - Prepared Data")
     return dataset, dataloader, sources

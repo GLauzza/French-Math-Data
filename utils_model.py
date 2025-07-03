@@ -15,10 +15,6 @@ torch.manual_seed(0)
 torch.cuda.manual_seed(0)
 torch.cuda.manual_seed_all(0)
 
-import os
-os.environ["TORCHDYNAMO_VERBOSE"] = "1"
-os.environ["TORCH_LOGS"]="+dynamo"
-
 SYSTEM_INSTRUCTIONS = {
     "math": (
         "Please reason step by step, and put your final answer within \\boxed{}."
@@ -221,13 +217,13 @@ def get_config(name, task="math", n=1, max_length=1000000):
     elif name == "Qwen3-32B":
         # quantize(config.MODEL_PATHS[0]+"Qwen/Qwen3-32B", config.MODEL_PATHS[1]+"Qwen3-32B-quantized", "compressor")
         return (
-            "Qwen/Qwen3-32B",
+            # "Qwen/Qwen3-32B",
             # "Qwen/Qwen3-32B-AWQ",
             # "Qwen/Qwen3-32B-bnb-4bit",
             # "Qwen/Qwen3-32B-unsloth-bnb-4bit", # Unsupported in vllm yet
             # "Qwen/Qwen3-32B-GPTQ-Int4",
             # "Qwen/Qwen3-32B-GPTQ-Int8",
-            # "Qwen/Qwen3-32B-FP8-dynamic",
+            "Qwen/Qwen3-32B-FP8-dynamic",
             # "Qwen/Qwen3-32B-quantized.w4a16", # Doesn't work
             # "Qwen/Qwen3-32B.w8a8",
             # "Qwen/Qwen3-32B-quantized",
