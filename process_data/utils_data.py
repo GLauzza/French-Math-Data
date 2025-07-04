@@ -157,9 +157,23 @@ def to_latex(text):
 
 
 def chunk(data):
-    splitted = data.split(". ")
-    sentences = [chunk + ". "*(i != len(splitted)-1) for i, chunk in enumerate(splitted) if len()]
-    return 
+    splitted = re.split(r"((?:(?<![\.:])[\.\?\!\n][\s+\n]\n*)(?!\s*-))", data)
+    sentences = (
+        [chunk + sep for chunk, sep in zip(splitted[0::2], splitted[1::2])] +
+        [splitted[-1]]
+    )
+    chunks = []
+    chunk_length = 0
+    for sentence in sentences:
+        if chunk_length + len(sentence) > 1000:
+            chunk_length = 0
+        if chunk_length == 0:
+            chunks.append(sentence)
+        else:
+            chunks[-1] += sentence
+        chunk_length += len(sentence)
+    
+    return chunks
 
 
 def chunk_batch(data):
