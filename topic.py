@@ -1,10 +1,5 @@
-import pandas as pd
-
-import config
-
-
 def get_topics():
-    pass
+    return ["Algebra", "Boolean Theory", "Complex numbers", "Discrete maths"]
   
 
 def get_topic_grammar():
@@ -12,7 +7,7 @@ def get_topic_grammar():
     return f"""
         root ::= topic_list
 
-        topic_list ::= {{topics, }}[topics]
+        topic_list ::= topics (", " topics)* (".")?
 
         topics ::= "{'" | "'.join(topics)}"
     """

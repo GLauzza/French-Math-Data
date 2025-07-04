@@ -157,8 +157,9 @@ def to_latex(text):
 
 
 def chunk(data):
-    sentences = data.split(".")
-    return [chunk + "."*(i != len(sentences)-1) for i, chunk in enumerate(sentences)]
+    splitted = data.split(". ")
+    sentences = [chunk + ". "*(i != len(splitted)-1) for i, chunk in enumerate(splitted) if len()]
+    return 
 
 
 def chunk_batch(data):

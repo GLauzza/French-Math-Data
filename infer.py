@@ -28,7 +28,7 @@ def classify(model, dataset, dataloader, output_name):
     ).add_column(
         output_name+"_prob", outputs_prob
     ).remove_columns(
-        ["chat_input", "input_length"]
+        ["chat_input", "length"]
     )
 
     return dataset
@@ -130,10 +130,10 @@ if __name__ == "__main__":
     elif args.task == "topic":    
         output_ext = "topic"
         new_dataset_ext = "Topic"
-    if args.name:
-        new_dataset_name = args.name
     output_name = args.input + "_" + output_ext
     new_dataset_name = args.dataset + "-" + new_dataset_ext
+    if args.name:
+        new_dataset_name = args.name
 
     if args.model == "fasttext":
         dataset = classify(model, dataset, dataloader, output_name)
@@ -147,7 +147,7 @@ if __name__ == "__main__":
             regroup_chunks(dataset, output_name)
         )
 
-    if "solution" in output_name:
+    if "solution" in output_name and args.model != "fasttext":
         dataset = extract_answer(dataset, output_name)
 
     print("FM - Saving")

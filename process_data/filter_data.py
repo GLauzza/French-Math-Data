@@ -172,9 +172,9 @@ def filter_train_math_fr(dataset):
     dataset = dataset.filter(lambda x : x["solution_fr_lang"][0] == "__label__fra_Latn" and x["solution_fr_lang_prob"][0] > 0.95)
     # Translation length don't match
     dataset = dataset.filter(lambda x: (
-        similar_length(get_n_tokens(x["question"]), get_n_tokens(x["question_en"], 0.2)) and
-        similar_length(get_n_tokens(x["solution"]), get_n_tokens(x["solution_en"], 0.2)) and
-        similar_length(get_n_tokens(x["answer"]), get_n_tokens(x["answer_en"], 0.2))
+        similar_length(get_n_tokens(x["question"]), get_n_tokens(x["question_en"]), 0.2) and
+        similar_length(get_n_tokens(x["solution"]), get_n_tokens(x["solution_en"]), 0.2) and
+        similar_length(get_n_tokens(x["answer"]), get_n_tokens(x["answer_en"]), 0.2)
     ))
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
