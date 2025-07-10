@@ -194,14 +194,12 @@ def get_config(name, task="math", n=1, max_length=1000000):
             to_chat_template_qwen_2_5(task),
             DEFAULT_SAMPLING_PARAMS
         )
-
     elif name == "Qwen2.5-7B":
         return (
             "Qwen/Qwen2.5-7B",
             to_chat_template_qwen_2_5(task),
             DEFAULT_SAMPLING_PARAMS
         )
-
     elif name == "Qwen2.5-Math-7B-Instruct":
         return (
             "Qwen/Qwen2.5-Math-7B-Instruct",

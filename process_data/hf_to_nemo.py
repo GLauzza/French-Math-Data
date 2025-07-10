@@ -22,6 +22,10 @@ def hf_to_nemo(dataset, output_path, chat_template_fun, tokenizer):
                 "input": chat_template_fun(sample["question"]),
                 "output": sample["solution"] + tokenizer.eos_token,
             }) + "\n")
+    with open(output_path + "/validation.jsonl", "w", encoding="utf-8") as f:
+        f.write("\n")
+    with open(output_path + "/test.jsonl", "w", encoding="utf-8") as f:
+        f.write("\n")
     print("FM - Dataset Converted to Nemo")
 
 

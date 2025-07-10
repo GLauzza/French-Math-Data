@@ -33,10 +33,50 @@ def classify(model, dataset, dataloader, output_name):
 
     return dataset
 
+
+def infer_chunked(model, dataset, dataloader, output_name, sampling_params):
+    print("FM - Infering")
+
+    max_chunks = max(dataset["chunk_ids"])
+    outputs = []
+    for i in range(max_chunks):
+        chunk_outputs = []
+        for data in tqdm(dataloader):
+            if "chat_input" in data:
+                x = data["chat_input"]
+            else:
+                x = data
+            request_outputs = model.generate(x, sampling_params)
+            output = [request_output.outputs[0].text for request_output in request_outputs]
+            chunk_outputs += output
+            print(f"\n\n\nLens:{[len(sample) for sample in x]},{[len(sample) for sample in output]}\n\nInputs:\n{x}\n\nOutputs:\n{output}\n\n\n")
+        chunk_n_data = dataset[dataset["chunk_ids"] == i+1]
+        if i == 0:
+            outputs = chunk_outputs
+        else:
+            _, dataloader, _ = prepare_sorted_inference_data(, chat_template_fun, batch_size=-1, input_name="question", use_only_input=False, sortby=None)
+        
+    print("FM - Infered")
+
+    dataset = dataset.add_column(
+        output_name, outputs
+    ).remove_columns(
+        ["chat_input", "length"]
+    )
+
+    dataset = dataset.sort("id")
+    dataset = raw_dataset.add_column(
+        output_name,
+        regroup_chunks(dataset, output_name)
+    )
+
+    return dataset
+
     
 def infer(model, dataset, dataloader, output_name, sampling_params):
     print("FM - Infering")
     outputs = []
+
     for data in tqdm(dataloader):
         if "chat_input" in data:
             x = data["chat_input"]
@@ -137,15 +177,10 @@ if __name__ == "__main__":
 
     if args.model == "fasttext":
         dataset = classify(model, dataset, dataloader, output_name)
+    elif args.chunking:
+        dataset = infer_chunked(model, dataset, dataloader, output_name, sampling_params)
     else:
         dataset = infer(model, dataset, dataloader, output_name, sampling_params)
-
-    if args.chunking:
-        dataset = dataset.sort("id")
-        dataset = raw_dataset.add_column(
-            output_name,
-            regroup_chunks(dataset, output_name)
-        )
 
     if "solution" in output_name and args.model != "fasttext":
         dataset = extract_answer(dataset, output_name)

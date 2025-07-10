@@ -179,8 +179,15 @@ def chunk(data):
 def chunk_batch(data):
     chunked = [chunk(sample) for sample in data]
     flattened_chunks = [chunk for chunks in chunked for chunk in chunks]    
-    chunk_ids = [i for i, chunks in enumerate(chunked) for chunk in chunks]   
-    return flattened_chunks, chunk_ids
+    sample_ids = [i for i, chunks in enumerate(chunked) for chunk in chunks]
+    chunk_ids = [i for chunks in chunked for i, chunk in enumerate(chunks)]
+    dataset = Dataset.from_dict({
+        input_name: flattened_chunks,
+        "sample_id": sample_ids,
+        "chunk_ids": chunk_ids,
+        "id": list(range(len(flattened_chunks))),
+    })
+    return dataset
 
 
 def regroup_chunks(dataset, output_name):
@@ -197,20 +204,33 @@ def regroup_chunks(dataset, output_name):
 
 def prepare_inference_data(dataset, chat_template_fun, batch_size=-1, input_name="question", use_only_input=False, sortby=None, chunking=False):
     print("FM - Preparing Data")
-    if chunking:
-        use_only_input=False
-        flattened_chunks, chunk_ids = chunk_batch(dataset[input_name])
-        dataset = Dataset.from_dict({
-            input_name: flattened_chunks,
-            "chunk_id": chunk_ids,
-            "id": list(range(len(flattened_chunks))),
-        })
-    if not sortby:
+    if not chunking:
+        dataset, dataloader, sources = prepare_sorted_inference_data(dataset, chat_template_fun, batch_size=-1, input_name="question", use_only_input=False, sortby=None)
+        print("FM - Prepared Data")
+        return dataset, dataloader, sources
+
+    use_only_input = False
+    chunked_dataset = chunk_batch(dataset[input_name])
+
+    chunk_n_data = dataset[dataset["chunk_ids"] == 0]
+    _, dataloader, _ = prepare_sorted_inference_data(chunk_n_data, chat_template_fun, batch_size=-1, input_name="question", use_only_input=False, sortby=None)
+
+    print("FM - Prepared Data")
+    return dataset, dataloader, None
+
+def prepare_sorted_inference_data(dataset, chat_template_fun, batch_size=-1, input_name="question", use_only_input=False, sortby=None, answer_start=None):
+    if sortby is None:
         sortby = input_name
-    dataset = dataset.add_column(
-        "chat_input",
-        [chat_template_fun(question) for question in dataset[input_name]]
-    )
+    if answer_start is None:
+        dataset = dataset.add_column(
+            "chat_input",
+            [chat_template_fun(question) for question in dataset[input_name]]
+        )
+    else:
+        dataset = dataset.add_column(
+            "chat_input",
+            [chat_template_fun(question) + answer for question, answer in zip(dataset[input_name], answer_start)]
+        )
     dataset = dataset.add_column(
         "length",
         [len(x) for x in dataset[sortby]]
@@ -228,5 +248,4 @@ def prepare_inference_data(dataset, chat_template_fun, batch_size=-1, input_name
     if "source" in dataset:
         sources = set(dataset["source"])
 
-    print("FM - Prepared Data")
     return dataset, dataloader, sources
