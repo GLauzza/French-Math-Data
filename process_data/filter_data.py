@@ -45,6 +45,18 @@ def filter_big_math(dataset):
     return dataset
 
 
+def filter_deepmath(dataset):
+    n_samples = dataset.num_rows
+    # Question too short/long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 200))
+    # Answer too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["final_answer"], 0, 25))
+    # Solution too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["r1_solution_1"], 0, 16384))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    return dataset
+
+
 def filter_limo(dataset):
     n_samples = dataset.num_rows
     # Question too short/long

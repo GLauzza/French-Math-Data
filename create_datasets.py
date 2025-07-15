@@ -9,6 +9,7 @@ import pandas as pd
 
 from process_data.utils_data import *
 from process_data.filter_data import *
+from process_data.extract_answer import *
 
 
 if __name__ == "__main__":
@@ -27,6 +28,9 @@ if __name__ == "__main__":
 
         big_math = load_data("SynthLabsAI/Big-Math-RL-Verified").select(range(10000))
         big_math = filter_big_math(big_math)
+
+        deepmath = load_data("zwhe99/DeepMath-103K").select(range(10000))
+        deepmath = filter_deepmath(deepmath)
 
         limo = load_data("GAIR/LIMO")
         limo = filter_limo(limo)
@@ -71,105 +75,114 @@ if __name__ == "__main__":
         s1k_1_1 = filter_s1k_1_1(s1k_1_1)
 
         cot_datasets = [
+            # {
+            #     "name": "am-deepseek-distill",
+            #     "dataset": am_deepseek_distill,
+            #     "question": am_deepseek_distill["question"],
+            #     "answer": am_deepseek_distill["ground_truth"],
+            #     "solution": am_deepseek_distill["answer"],
+            #     "source": ["am-deepseek-distill" + source for source in am_deepseek_distill["question_source"]],
+            #     "model": am_deepseek_distill["model_name"],
+            # },
+            # {
+            #     "name": "big-math",
+            #     "dataset": big_math,
+            #     "question": big_math["problem"],
+            #     "answer": big_math["answer"],
+            #     "solution": [None] * len(big_math),
+            #     "source": ["big-math/" + source for source in big_math["source"]],
+            #     "model": [None] * len(big_math),
+            # },
             {
-                "name": "am-deepseek-distill",
-                "dataset": am_deepseek_distill,
-                "question": am_deepseek_distill["question"],
-                "answer": am_deepseek_distill["ground_truth"],
-                "solution": am_deepseek_distill["answer"],
-                "source": ["am-deepseek-distill/" + source for source in am_deepseek_distill["question_source"]],
-                "model": am_deepseek_distill["model_name"],
+                "name": "deepmath",
+                "dataset": deepmath,
+                "question": deepmath["question"],
+                "answer": deepmath["final_answer"],
+                "solution": deepmath["r1_solution_1"],
+                "source": ["deepmath"] * len(deepmath),
+                "model": ["deepseek-r1"] * len(deepmath),
             },
-            {
-                "name": "big-math",
-                "dataset": big_math,
-                "question": big_math["problem"],
-                "answer": big_math["answer"],
-                "solution": [None] * len(big_math),
-                "source": ["big-math/" + source for source in big_math["source"]],
-                "model": [None] * len(big_math),
-            },
-            {
-                "name": "limo",
-                "dataset": limo,
-                "question": limo["question"],
-                "answer": limo["answer"],
-                "solution": limo["solution"],
-                "source": ["limo/NuminaMath-CoT or AIME or MATH or other"] * len(limo),
-                "model": ["DeepSeek R1 or DeepSeek-R1-Distill-Qwen-32B or Qwen2.5-32b-Instruct or other"] * len(limo)
-            },
-            {
-                "name": "limr",
-                "dataset": limr,
-                "question": limr["prompt"],
-                "answer": limr["answer"],
-                "solution": [None] * len(limr),
-                "source": ["limr/" + source for source in limr["source"]],
-                "model": [None] * len(limr)
-            },
-            {
-                "name": "llama-nemotron",
-                "dataset": llama_nemotron,
-                "question": [x[0]["content"] for x in llama_nemotron["input"]],
-                "answer": llama_nemotron["answer"],
-                "solution": llama_nemotron["output"],
-                "source": ["llama-nemotron/AoPS"] * len(llama_nemotron),
-                "model": llama_nemotron["generator"],
-            },
-            {
-                "name": "math-lvl5-fr",
-                "dataset": math_lvl5_fr_train,
-                "question": math_lvl5_fr_train["problem"],
-                "answer": math_lvl5_fr_train["answer"],
-                "solution": math_lvl5_fr_train["solution"],
-                "source": ["math-lvl5-fr/math"] * len(math_lvl5_fr_train),
-                "model": [None] * len(math_lvl5_fr_train),
-            },
-            {
-                "name": "metamath-qa",
-                "dataset": metamath_qa,
-                "question": metamath_qa["query"],
-                "answer": metamath_qa["answer"],
-                "solution": metamath_qa["response"],
-                "source": ["metamath-qa/" + subset for subset in metamath_qa["type"]],
-                "model": ["unknown"] * len(metamath_qa),
-            },
-            {
-                "name": "numinamath-1.5",
-                "dataset": numinamath_1_5,
-                "question": numinamath_1_5["problem"],
-                "answer": numinamath_1_5["answer"],
-                "solution": numinamath_1_5["solution"],
-                "source": ["numina-math-1.5/" + source for source in numinamath_1_5["source"]],
-                "model": ["unknown"] * len(numinamath_1_5),
-            },
-            {
-                "name": "open-r1-math",
-                "dataset": open_r1_math,
-                "question": open_r1_math["problem"],
-                "answer": open_r1_math["answer"],
-                "solution": open_r1_math["generations"],
-                "source": ["open-r1-math/" + source for source in open_r1_math["source"]],
-                "model": ["open-r1"] * len(open_r1_math),
-            },
-            {
-                "name": "open-thoughts-2",
-                "dataset": open_thoughts_2,
-                "question": [x[0]["value"] for x in open_thoughts_2["conversations"]],
-                "answer": [None] * len(open_thoughts_2),
-                "solution": [x[1]["value"] for x in open_thoughts_2["conversations"]],
-                "source": ["open-thoughts-2/" + source if source is not None else None for source in open_thoughts_2["source"]],
-                "model": ["unknown"] * len(open_thoughts_2),
-            },
-            {
-                "name": "s1k-1.1",
-                "dataset": s1k_1_1,
-                "question": s1k_1_1["question"],
-                "answer": s1k_1_1["solution"],
-                "solution": s1k_1_1["deepseek_thinking_trajectory"],
-                "source": ["s1k-1.1/" + source for source in s1k_1_1["source_type"]],
-                "model": ["deepseek-r1"] * len(s1k_1_1),
-            },
+            # {
+            #     "name": "limo",
+            #     "dataset": limo,
+            #     "question": limo["question"],
+            #     "answer": limo["answer"],
+            #     "solution": limo["solution"],
+            #     "source": ["limo/NuminaMath-CoT or AIME or MATH or other"] * len(limo),
+            #     "model": ["DeepSeek R1 or DeepSeek-R1-Distill-Qwen-32B or Qwen2.5-32b-Instruct or other"] * len(limo)
+            # },
+            # {
+            #     "name": "limr",
+            #     "dataset": limr,
+            #     "question": limr["prompt"],
+            #     "answer": limr["answer"],
+            #     "solution": [None] * len(limr),
+            #     "source": ["limr/" + source for source in limr["source"]],
+            #     "model": [None] * len(limr)
+            # },
+            # {
+            #     "name": "llama-nemotron",
+            #     "dataset": llama_nemotron,
+            #     "question": [x[0]["content"] for x in llama_nemotron["input"]],
+            #     "answer": llama_nemotron["answer"],
+            #     "solution": llama_nemotron["output"],
+            #     "source": ["llama-nemotron/AoPS"] * len(llama_nemotron),
+            #     "model": llama_nemotron["generator"],
+            # },
+            # {
+            #     "name": "math-lvl5-fr",
+            #     "dataset": math_lvl5_fr_train,
+            #     "question": math_lvl5_fr_train["problem"],
+            #     "answer": math_lvl5_fr_train["answer"],
+            #     "solution": math_lvl5_fr_train["solution"],
+            #     "source": ["math-lvl5-fr/math"] * len(math_lvl5_fr_train),
+            #     "model": [None] * len(math_lvl5_fr_train),
+            # },
+            # {
+            #     "name": "metamath-qa",
+            #     "dataset": metamath_qa,
+            #     "question": metamath_qa["query"],
+            #     "answer": metamath_qa["answer"],
+            #     "solution": metamath_qa["response"],
+            #     "source": ["metamath-qa/" + subset for subset in metamath_qa["type"]],
+            #     "model": ["unknown"] * len(metamath_qa),
+            # },
+            # {
+            #     "name": "numinamath-1.5",
+            #     "dataset": numinamath_1_5,
+            #     "question": numinamath_1_5["problem"],
+            #     "answer": numinamath_1_5["answer"],
+            #     "solution": numinamath_1_5["solution"],
+            #     "source": ["numina-math-1.5/" + source for source in numinamath_1_5["source"]],
+            #     "model": ["unknown"] * len(numinamath_1_5),
+            # },
+            # {
+            #     "name": "open-r1-math",
+            #     "dataset": open_r1_math,
+            #     "question": open_r1_math["problem"],
+            #     "answer": open_r1_math["answer"],
+            #     "solution": open_r1_math["generations"],
+            #     "source": ["open-r1-math/" + source for source in open_r1_math["source"]],
+            #     "model": ["open-r1"] * len(open_r1_math),
+            # },
+            # {
+            #     "name": "open-thoughts-2",
+            #     "dataset": open_thoughts_2,
+            #     "question": [x[0]["value"] for x in open_thoughts_2["conversations"]],
+            #     "answer": [None] * len(open_thoughts_2),
+            #     "solution": [x[1]["value"] for x in open_thoughts_2["conversations"]],
+            #     "source": ["open-thoughts-2/" + source if source is not None else None for source in open_thoughts_2["source"]],
+            #     "model": ["unknown"] * len(open_thoughts_2),
+            # },
+            # {
+            #     "name": "s1k-1.1",
+            #     "dataset": s1k_1_1,
+            #     "question": s1k_1_1["question"],
+            #     "answer": s1k_1_1["solution"],
+            #     "solution": s1k_1_1["deepseek_thinking_trajectory"],
+            #     "source": ["s1k-1.1/" + source for source in s1k_1_1["source_type"]],
+            #     "model": ["deepseek-r1"] * len(s1k_1_1),
+            # },
         ]
         fused_cot = fusion_datasets(cot_datasets)
         fused_cot = fused_cot.filter(lambda x: x["solution"] is not None)

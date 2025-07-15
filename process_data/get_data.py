@@ -10,6 +10,7 @@ import config
 
 
 def get_huggingface_data(repo_id, allow_patterns):
+    print("FM - Downloading", repo_id)
     output_path = config.DATA_PATHS[1] + repo_id.split("/")[-1]
     snapshot_download(
         repo_id=repo_id,
@@ -18,6 +19,7 @@ def get_huggingface_data(repo_id, allow_patterns):
         allow_patterns=allow_patterns
     )
     shutil.copytree(output_path, config.DATA_PATHS[2] + repo_id.split("/")[-1], dirs_exist_ok=True)
+    print("FM - Downloaded", repo_id)
 
 
 def get_am_deepseek_distill():
@@ -27,6 +29,8 @@ def get_am_deepseek_distill():
 def get_big_math():
     get_huggingface_data("SynthLabsAI/Big-Math-RL-Verified", ["*.parquet"]) # ~30MB
 
+def get_deepmath():
+    get_huggingface_data("zwhe99/DeepMath-103K", ["*.parquet"]) # ~2GB
 
 def get_limo():
     get_huggingface_data("GAIR/LIMO", ["*.jsonl"]) # ~20MB
@@ -90,6 +94,7 @@ def get_s1k_1_1():
 if __name__ == "__main__":
     # get_am_deepseek_distill() # Already on JZ
     get_big_math()
+    get_deepmath()
     get_limo()
     get_limr()
     # get_llama_nemotron() # Already on JZ

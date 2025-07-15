@@ -7,6 +7,8 @@ from math_verify import parse, verify
 
 import config
 from process_data.utils_data import *
+from process_data.extract_answer import *
+from process_data.prepare_data import *
 from utils_model import *
 
 
