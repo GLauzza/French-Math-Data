@@ -42,7 +42,8 @@ USER_INSTRUCTIONS = {
         "Please translate sentence by sentence the full following text in French."
         "Only output the translation."
         "Don't summarize."
-        "Preserve any mathematical formula formatting.\n"
+        "Preserve any mathematical formula formatting."
+        "Don't translate what is inside \\boxed{}."
         "Text:\n"
     ),
     "topic": (
@@ -62,6 +63,7 @@ def load_model(model_path, is_vllm=False):
         try:
             model = LLM(
                 config.MODEL_PATHS[0]+model_path,
+                    enable_prefix_caching=True,
                     # config.MODEL_PATHS[1]+(model_path.split("/")[-1])+"/Qwen3-32B-Q4_K_M.gguf", 
                     # dtype=torch.bfloat16,
                     # trust_remote_code=True,
@@ -75,6 +77,7 @@ def load_model(model_path, is_vllm=False):
             try:
                 model = LLM(
                     config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
+                    enable_prefix_caching=True,
                     # config.MODEL_PATHS[1]+(model_path.split("/")[-1])+"/Qwen3-32B-Q4_K_M.gguf", 
                     # dtype=torch.bfloat16,
                     # trust_remote_code=True,
@@ -87,6 +90,7 @@ def load_model(model_path, is_vllm=False):
             except:
                 model = LLM(
                     config.MODEL_PATHS[2]+(model_path.split("/")[-1]),
+                    enable_prefix_caching=True,
                     # config.MODEL_PATHS[1]+(model_path.split("/")[-1])+"/Qwen3-32B-Q4_K_M.gguf", 
                     # dtype=torch.bfloat16,
                     # trust_remote_code=True,

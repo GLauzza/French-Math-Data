@@ -10,18 +10,28 @@ import config
 from utils_model import *
 from process_data.utils_data import *
 from process_data.prepare_data import *
+from process_data.extract_answer import *
 from topic import *
 
 
 def classify(model, dataset, dataloader, output_name):
     print("FM - Classifying")
-    outputs_lang = []
+    outputs_lang = []   
     outputs_prob = []
     for x in tqdm(dataloader):
-        output = model.predict([sample.replace("\n", " ") for sample in x], k=5)
-        outputs_lang += output[0]
-        outputs_prob += output[1]
-        print(f"\n\n\nInputs:\n{x}\n\nOutputs_lang:\n{output[0]}\n\nOutputs_prob:\n{output[1]}\n\n\n")
+        for sample in x:
+            non_math_text = dirty_remove_math(sample).split("\n")
+            output = model.predict(non_math_text, k=5)
+            unique_langs = set([lang for langs in output[0] for lang in langs])
+            languages = {unique_lang:0 for unique_lang in unique_langs}
+            for langs, probs in zip(output[0], output[1]):
+                for lang, prob in zip(langs, probs):
+                    languages[lang] += prob
+            languages = {lang:(prob/len(non_math_text)) for lang, prob in languages.items()}
+            sorted_languages = sorted(languages.items(), key=lambda item: item[1])
+            outputs_lang.append([lang for lang, prob in sorted_languages])
+            outputs_prob.append([prob for lang, prob in sorted_languages])
+        print(f"\n\n\nInputs:\n{non_math_text}\n\nOutputs_lang:\n{output[0]}\n\nOutputs_prob:\n{output[1]}\n\n\n")
     print("FM - Classified")
 
     dataset = dataset.add_column(
@@ -35,24 +45,30 @@ def classify(model, dataset, dataloader, output_name):
     return dataset
 
 
-def infer_chunked(model, raw_dataset, chunked_dataset, dataloader, output_name, sampling_params, chat_template_fun, batch_size, input_name):
+def infer_chunked(model, raw_dataset, chunked_dataset, dataloader, output_name, sampling_params, chat_template_fun, batch_size, input_name, chunk_size):
     print("FM - Infering")
 
     max_chunks = max(chunked_dataset["chunk_id"])
     n_sample = max(chunked_dataset["sample_id"]) + 1
     inputs = [""] * n_sample
     outputs = [[]] * n_sample
-    for i in range(max_chunks):
+    for i in tqdm(range(max_chunks)):
         for data in tqdm(dataloader):
+            print(f"\n\n\nLens:{[len(sample) for sample in data['chat_input']]}\n\nInputs:\n{data['chat_input']}\n\n")
             request_outputs = model.generate(data["chat_input"], sampling_params)
             output = [request_output.outputs[0].text for request_output in request_outputs]
-            for sample_id, inp, out, sep in zip(data["sample_id"], data[input_name], output, data["sep"]):
-                if i == 0:
-                    outputs[sample_id] = [out + sep]
+            output_toks = [request_output.outputs[0].token_ids for request_output in request_outputs]
+            for sample_id, inp, out, out_toks, sep in zip(data["sample_id"], data[input_name], output, output_toks, data["sep"]):
+                if len(out_toks) < 1.75*chunk_size:
+                    if i == 0:
+                        outputs[sample_id] = [out + sep]
+                    else:
+                        outputs[sample_id].append(out + sep)
+                    inputs[sample_id] = inp + sep
                 else:
-                    outputs[sample_id].append(out + sep)
-                inputs[sample_id] = inp + sep
-            # print(f"\n\n\nLens:{[len(sample) for sample in data['chat_input']]},{[len(sample) for sample in output]}\n\nInputs:\n{data['chat_input']}\n\nOutputs:\n{output}\n\n\n")
+                    inputs[sample_id] = "<DISCARDED>"
+                    outputs[sample_id] = "<DISCARDED>"
+            print(f"\n\n\nLens:{[len(sample) for sample in output]}\n\nOutputs:\n{output}\n\n\n")
 
         if i < max_chunks:
             chunk_n_data = chunked_dataset.filter(lambda x : x["chunk_id"] == i+1)
@@ -60,9 +76,8 @@ def infer_chunked(model, raw_dataset, chunked_dataset, dataloader, output_name, 
                 "concatenated_chunks",
                 [prev_input + curr_input for prev_input, curr_input in zip(inputs, chunk_n_data[input_name])]
             )
+            chunk_n_data = chunk_n_data.filter(lambda x : not x["concatenated_chunks"].startswith("<DISCARDED>"))
             answer_start = [outputs[sample_id][i] for sample_id in chunk_n_data["sample_id"]]
-            # print(chunk_n_data.filter(lambda x : x["sample_id"] == 0)[0])
-            # print(f"answer start:\n{outputs[0][i]}\n")
             _, dataloader, _ = prepare_sorted_inference_data(chunk_n_data, chat_template_fun, batch_size=batch_size, input_name="concatenated_chunks", answer_start=answer_start)
         
     outputs = [" ".join(output) for output in outputs]
@@ -122,11 +137,12 @@ if __name__ == "__main__":
     model_path, chat_template_fun, sampling_params = get_config(args.model, task=args.task, n=1)
     if args.task == "translation":
         sampling_params = SamplingParams(
-            temperature=0.5,
+            temperature=0.3,
             top_p=0.8,
-            top_k=10,
+            top_k=20,
             min_p=0,
-            max_tokens=(32768 if args.input == "solution" else 2*args.chunk_size if args.chunk_size != -1 else 1024),
+            repetition_penalty=1.1,
+            max_tokens=(2*args.chunk_size if args.chunk_size != -1 else 32768 if args.input == "solution" else 1024),
             seed=0
         )
     elif args.task == "topic":
@@ -142,7 +158,7 @@ if __name__ == "__main__":
 
     model = load_model(model_path, is_vllm=True)
 
-    raw_dataset = load_data(args.dataset).select(range(512))
+    raw_dataset = load_data(args.dataset).select(range(16))
     dataset, dataloader, _ = prepare_inference_data(
         raw_dataset,
         chat_template_fun,
@@ -173,7 +189,7 @@ if __name__ == "__main__":
     if args.model == "fasttext":
         dataset = classify(model, dataset, dataloader, output_name)
     elif args.chunk_size != -1:
-        dataset = infer_chunked(model, raw_dataset, dataset, dataloader, output_name, sampling_params, chat_template_fun, args.batch_size, args.input)
+        dataset = infer_chunked(model, raw_dataset, dataset, dataloader, output_name, sampling_params, chat_template_fun, args.batch_size, args.input, args.chunk_size)
     else:
         dataset = infer(model, dataset, dataloader, output_name, sampling_params)
 

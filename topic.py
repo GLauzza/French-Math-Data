@@ -7,7 +7,7 @@ def get_topic_grammar():
     return f"""
         root ::= topic_list
 
-        topic_list ::= topics (", " topics)* (".")?
+        topic_list ::= topics (", " topics)? (", " topics)? (", " topics)? (", " topics)? (".")?
 
         topics ::= "{'" | "'.join(topics)}"
     """

@@ -1,6 +1,7 @@
 import json
 import sys
 import os
+import re
 
 from datasets import load_dataset, Dataset, load_from_disk
 import numpy as np
@@ -112,3 +113,34 @@ def fusion_datasets(datasets):
             fused_dataset[feature].extend(dataset[feature])
 
     return Dataset.from_dict(fused_dataset)
+
+def dirty_remove_math(text):
+    letters = "a-zA-ZàâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ"
+    # remove latex and math content
+    text = re.sub(r"\$\$(.*?)\$\$", " ", text)
+    text = re.sub(r"\$(.*?)\$", " ", text)    
+    text = re.sub(r"\\\[(.*?)\\\]", " ", text)
+    text = re.sub(r"\\\{(.*?)\\\}", " ", text)    
+    text = re.sub(r"\{(.*?)\}", " ", text)
+    text = re.sub(r"\[(.*?)\]", " ", text)
+    text = re.sub(r"\((.*?)\)", " ", text)
+    text = re.sub(rf"\\[{letters}]+\{{.*?\}}", " ", text)
+    text = re.sub(rf"\\[{letters}]+", " ", text)
+    # ... -> .
+    text = re.sub(r"\s*\.\s*\.\s*\.\s*", ". ", text)
+    # remove words containing non-words
+    text = re.sub(rf"\b\w*[^{letters}0-9\.\s'’:\?\!,;-]+\w*\b", " ", text)
+    # remove special chars
+    text = re.sub(rf"[^{letters}\.\s'’:\?\!,;]", " ", text, flags=re.UNICODE)
+    # remove isolated single character
+    for _ in range(2):
+        text = re.sub(rf"\b[{letters}0-9]['’]*\b(?:\s+\b[{letters}0-9]['’]*\b)+", " ", text)
+        text = re.sub(rf"\s+[^{letters}0-9:\?\!;]\s+", " ", text)
+        text = re.sub(r"\W(?:\s+\W)+", " ", text)
+    # remove isolated numbers
+    text = re.sub(r"(?:\s+(?:(?:mod)?[0-9]+[\.,]?)+){2,}\s+", " ", text)
+    # strip
+    text = re.sub(r"\s+", " ", text).strip()
+    # remove repeated words
+    text = re.sub(rf"\b((?:[{letters}0-9]+\s*){{1,5}})\b(?:\s+\1)+", r"\1", text)
+    return text
