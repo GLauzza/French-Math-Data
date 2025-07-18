@@ -6,7 +6,6 @@ from tqdm import tqdm
 from math_verify import parse, verify
 
 import config
-from process_data.utils_data import *
 from process_data.extract_answer import *
 from process_data.prepare_data import *
 from utils_model import *
@@ -17,6 +16,7 @@ def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_si
     dataset, dataloader, sources = prepare_inference_data(
         dataset,
         chat_template_fun,
+        model.get_tokenizer(),
         batch_size=batch_size,
     )
 

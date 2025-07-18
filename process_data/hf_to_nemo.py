@@ -9,7 +9,7 @@ import datasets
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import config
-from utils_data import *
+from prepare_data import *
 from utils_model import *
 
 

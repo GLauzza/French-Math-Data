@@ -5,7 +5,7 @@ from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
 
 import config
 from utils_model import *
-from process_data.utils_data import *
+from process_data.prepare_data import *
 
 
 def prepare_data(chat_template_fun, dataset, tokenizer):

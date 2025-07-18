@@ -39,11 +39,12 @@ USER_INSTRUCTIONS = {
         ""
     ),
     "translation": (
-        "Please translate sentence by sentence the full following text in French."
-        "Only output the translation."
-        "Don't summarize."
-        "Preserve any mathematical formula formatting."
-        "Don't translate what is inside \\boxed{}."
+        "Please translate sentence by sentence the full following text in French.\n"
+        "- Only output the translation.\n"
+        # "- Don't summarize.\n"
+        # "- Don't solve the problem, only translate.\n"
+        "- Preserve any mathematical formula formatting.\n"
+        "- Don't translate what is inside \\boxed{}.\n"
         "Text:\n"
     ),
     "topic": (

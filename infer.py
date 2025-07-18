@@ -8,7 +8,6 @@ from math_verify import parse, verify
 
 import config
 from utils_model import *
-from process_data.utils_data import *
 from process_data.prepare_data import *
 from process_data.extract_answer import *
 from topic import *
@@ -28,7 +27,7 @@ def classify(model, dataset, dataloader, output_name):
                 for lang, prob in zip(langs, probs):
                     languages[lang] += prob
             languages = {lang:(prob/len(non_math_text)) for lang, prob in languages.items()}
-            sorted_languages = sorted(languages.items(), key=lambda item: item[1])
+            sorted_languages = sorted(languages.items(), key=lambda item: -item[1])
             outputs_lang.append([lang for lang, prob in sorted_languages])
             outputs_prob.append([prob for lang, prob in sorted_languages])
         print(f"\n\n\nInputs:\n{non_math_text}\n\nOutputs_lang:\n{output[0]}\n\nOutputs_prob:\n{output[1]}\n\n\n")
@@ -59,22 +58,25 @@ def infer_chunked(model, raw_dataset, chunked_dataset, dataloader, output_name, 
             output = [request_output.outputs[0].text for request_output in request_outputs]
             output_toks = [request_output.outputs[0].token_ids for request_output in request_outputs]
             for sample_id, inp, out, out_toks, sep in zip(data["sample_id"], data[input_name], output, output_toks, data["sep"]):
-                if len(out_toks) < 1.75*chunk_size:
+                if len(out_toks) < 1.75*chunk_size and inputs[sample_id] != "<DISCARDED>":
                     if i == 0:
                         outputs[sample_id] = [out + sep]
                     else:
                         outputs[sample_id].append(out + sep)
                     inputs[sample_id] = inp + sep
                 else:
+                    if i == 0:
+                        outputs[sample_id] = "<DISCARDED>"
+                    else:
+                        outputs[sample_id].append("<DISCARDED>")
                     inputs[sample_id] = "<DISCARDED>"
-                    outputs[sample_id] = "<DISCARDED>"
             print(f"\n\n\nLens:{[len(sample) for sample in output]}\n\nOutputs:\n{output}\n\n\n")
 
         if i < max_chunks:
             chunk_n_data = chunked_dataset.filter(lambda x : x["chunk_id"] == i+1)
             chunk_n_data = chunk_n_data.add_column(
                 "concatenated_chunks",
-                [prev_input + curr_input for prev_input, curr_input in zip(inputs, chunk_n_data[input_name])]
+                [inputs[sample["sample_id"]] + sample[input_name] for sample in chunk_n_data]
             )
             chunk_n_data = chunk_n_data.filter(lambda x : not x["concatenated_chunks"].startswith("<DISCARDED>"))
             answer_start = [outputs[sample_id][i] for sample_id in chunk_n_data["sample_id"]]
@@ -162,6 +164,7 @@ if __name__ == "__main__":
     dataset, dataloader, _ = prepare_inference_data(
         raw_dataset,
         chat_template_fun,
+        model.get_tokenizer(),
         batch_size=args.batch_size,
         input_name=args.input,
         use_only_input=True,

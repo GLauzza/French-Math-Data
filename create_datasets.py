@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from process_data.utils_data import *
+from process_data.prepare_data import *
 from process_data.filter_data import *
 from process_data.extract_answer import *
 
