@@ -160,11 +160,11 @@ if __name__ == "__main__":
 
     model = load_model(model_path, is_vllm=True)
 
-    raw_dataset = load_data(args.dataset).select(range(16))
+    raw_dataset = load_data(args.dataset).shuffle(seed=42).select(range(20000))
     dataset, dataloader, _ = prepare_inference_data(
         raw_dataset,
         chat_template_fun,
-        model.get_tokenizer(),
+        model.get_tokenizer() if args.chunk_size != -1 else None,
         batch_size=args.batch_size,
         input_name=args.input,
         use_only_input=True,

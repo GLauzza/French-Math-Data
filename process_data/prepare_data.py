@@ -53,7 +53,6 @@ def fusion_datasets(datasets):
 
     for dataset in datasets:
         print(f"Processing dataset: {dataset['name']}")
-        print(print_distributions(dataset["dataset"],[]))
         for feature in features:
             fused_dataset[feature].extend(dataset[feature])
 
@@ -92,8 +91,9 @@ def dirty_remove_math(text):
     return text
 
 
-def chunk(data, tokenizer, chunk_size):
-    splitted = re.split(r"((?:(?<![\.:])[\.\?\!\n][\s+\n]\n*)(?!\s*-))", data)
+def chunk(text, tokenizer, chunk_size):
+    print("input text:", text)
+    splitted = re.split(r"((?:(?<![\.:])[\.\?\!\n][\s+\n]\n*)(?!\s*-))", text)
     sentences = (
         [chunk + sep for chunk, sep in zip(splitted[0::2], splitted[1::2])] +
         [splitted[-1]]
@@ -117,15 +117,16 @@ def chunk(data, tokenizer, chunk_size):
         chunks_seps.append(chunk[len(stripped_chunk):])
         chunks[i] = stripped_chunk
     
+    print("output chunks", chunks)
     return chunks, chunks_seps
 
  
-def chunk_batch(data, tokenizer, input_name, chunk_size):
+def chunk_batch(texts, tokenizer, input_name, chunk_size):
     print("FM - Chunking Data")
     chunked = []
     chunked_seps = []
-    for sample in data:
-        chunks, chunks_seps = chunk(sample, tokenizer, chunk_size)
+    for text in texts:
+        chunks, chunks_seps = chunk(text, tokenizer, chunk_size)
         chunked.append(chunks)
         chunked_seps.append(chunks_seps)
 

@@ -6,6 +6,7 @@ from datasets import load_dataset, Dataset, Value
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from math_verify import parse, verify
 
 from process_data.utils_data import *
 from process_data.prepare_data import *
@@ -24,56 +25,60 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if "Fused-CoT" in args.datasets:    
-        am_deepseek_distill = load_data("a-m-team/AM-DeepSeek-Distilled-40M", data_files="math_r1_*.jsonl").select(range(10000))
-        am_deepseek_distill = filter_am_deepseek_distill(am_deepseek_distill)
+        # am_deepseek_distill = load_data("a-m-team/AM-DeepSeek-Distilled-40M", data_files="math_r1_*.jsonl").select(range(10000))
+        # am_deepseek_distill = filter_am_deepseek_distill(am_deepseek_distill)
 
-        big_math = load_data("SynthLabsAI/Big-Math-RL-Verified").select(range(10000))
-        big_math = filter_big_math(big_math)
+        # big_math = load_data("SynthLabsAI/Big-Math-RL-Verified").select(range(10000))
+        # big_math = filter_big_math(big_math)
 
-        deepmath = load_data("zwhe99/DeepMath-103K").select(range(10000))
+        deepmath = load_data("zwhe99/DeepMath-103K")
+        deepmath = deepmath.add_column(
+            "solution",
+            [x.split("</think>")[0] for x in deepmath["r1_solution_1"]]
+        )   
         deepmath = filter_deepmath(deepmath)
 
-        limo = load_data("GAIR/LIMO")
-        limo = filter_limo(limo)
+        # limo = load_data("GAIR/LIMO")
+        # limo = filter_limo(limo)
 
-        limr = load_data("GAIR/LIMR")
-        limr = filter_limr(limr)
+        # limr = load_data("GAIR/LIMR")
+        # limr = filter_limr(limr)
 
-        llama_nemotron = load_data("nvidia/Llama-Nemotron-Post-Training-Dataset", data_files="SFT/math/math_v1.1.jsonl").select(range(10000))
-        llama_nemotron = llama_nemotron.add_column(
-            "answer",
-            [extract_boxed_text(x) for x in llama_nemotron["output"]]
-        )
-        llama_nemotron = filter_llama_nemotron(llama_nemotron)
+        # llama_nemotron = load_data("nvidia/Llama-Nemotron-Post-Training-Dataset", data_files="SFT/math/math_v1.1.jsonl").select(range(10000))
+        # llama_nemotron = llama_nemotron.add_column(
+        #     "answer",
+        #     [extract_boxed_text(x) for x in llama_nemotron["output"]]
+        # )
+        # llama_nemotron = filter_llama_nemotron(llama_nemotron)
         
-        math_lvl5_fr_train = load_data("le-leadboard/MATH_LVL5_fr")
-        math_lvl5_fr_train = math_lvl5_fr_train.add_column(
-            "answer",
-            [extract_boxed_text(x) for x in math_lvl5_fr_train["solution"]]
-        )
-        math_lvl5_fr_train = filter_math_lvl5_fr_train(math_lvl5_fr_train)
+        # math_lvl5_fr_train = load_data("le-leadboard/MATH_LVL5_fr")
+        # math_lvl5_fr_train = math_lvl5_fr_train.add_column(
+        #     "answer",
+        #     [extract_boxed_text(x) for x in math_lvl5_fr_train["solution"]]
+        # )
+        # math_lvl5_fr_train = filter_math_lvl5_fr_train(math_lvl5_fr_train)
 
-        metamath_qa = load_data("meta-math/MetaMathQA").select(range(10000))
-        metamath_qa = metamath_qa.add_column(
-            "answer",
-            [x.split("The answer is: ")[-1] for x in metamath_qa["response"]],
-        )
-        metamath_qa = filter_metamath_qa(metamath_qa)
+        # metamath_qa = load_data("meta-math/MetaMathQA").select(range(10000))
+        # metamath_qa = metamath_qa.add_column(
+        #     "answer",
+        #     [x.split("The answer is: ")[-1] for x in metamath_qa["response"]],
+        # )
+        # metamath_qa = filter_metamath_qa(metamath_qa)
 
-        numinamath_1_5 = load_data("AI-MO/NuminaMath-1.5").select(range(10000))
-        numinamath_1_5 = filter_numinamath_1_5(numinamath_1_5)
+        # numinamath_1_5 = load_data("AI-MO/NuminaMath-1.5").select(range(10000))
+        # numinamath_1_5 = filter_numinamath_1_5(numinamath_1_5)
 
-        open_r1_math = load_data("open-r1/OpenR1-Math-220k").select(range(1000))
-        open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons'])
-        open_r1_math = filter_open_r1_math(open_r1_math)
+        # open_r1_math = load_data("open-r1/OpenR1-Math-220k").select(range(1000))
+        # open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons'])
+        # open_r1_math = filter_open_r1_math(open_r1_math)
 
-        open_thoughts_2 = load_data("open-thoughts/OpenThoughts2-1M", data_files="data/*.parquet").select(range(10000))
-        open_thoughts_2 = filter_open_thoughts_2(open_thoughts_2)
+        # open_thoughts_2 = load_data("open-thoughts/OpenThoughts2-1M", data_files="data/*.parquet").select(range(10000))
+        # open_thoughts_2 = filter_open_thoughts_2(open_thoughts_2)
 
-        #TODO: PENSEZ
+        # #TODO: PENSEZ
 
-        s1k_1_1 = load_data("simplescaling/s1K-1.1")
-        s1k_1_1 = filter_s1k_1_1(s1k_1_1)
+        # s1k_1_1 = load_data("simplescaling/s1K-1.1")
+        # s1k_1_1 = filter_s1k_1_1(s1k_1_1)
 
         cot_datasets = [
             # {
@@ -99,7 +104,7 @@ if __name__ == "__main__":
                 "dataset": deepmath,
                 "question": deepmath["question"],
                 "answer": deepmath["final_answer"],
-                "solution": deepmath["r1_solution_1"],
+                "solution": deepmath["solution"],
                 "source": ["deepmath"] * len(deepmath),
                 "model": ["deepseek-r1"] * len(deepmath),
             },

@@ -1,18 +1,24 @@
 import sys
 import os
 
+from math_verify import parse, verify
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import config
+from process_data.extract_answer import *
+
 
 def get_n_tokens(x):
     return config.TOKENIZER(x, return_length=True)["length"][0]
+
 
 def filter_n_tokens(x, n_min, n_max):
     n_tokens = get_n_tokens(x)
     return n_tokens >= n_min and n_tokens <= n_max 
 
-def similar_length(n1, n2, tol):
-    return n1 + n1*tol > n2 - n2*tol or n2 + n2*tol > n1 - n1*tol
+
+def similar_length(gold_length, pred_length, tol):
+    return gold_length*(1+tol) >= pred_length and gold_length*(1-tol) <= pred_length
 
 
 def filter_am_deepseek_distill(dataset):
@@ -50,9 +56,15 @@ def filter_deepmath(dataset):
     # Question too short/long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 200))
     # Solution too long
-    dataset = dataset.filter(lambda x: filter_n_tokens(x["r1_solution_1"], 0, 16384))
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 8192))
     # Answer too long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["final_answer"], 0, 25))
+    # Answer in solution different
+    dataset = dataset.filter(lambda x: verify(
+        parse(to_latex(x["final_answer"])),
+        parse(to_latex(extract_boxed_text(x["solution"])))
+    ))
+    print(f"Total tokens: {sum([get_n_tokens(sample['solution']) for sample in dataset])/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
@@ -172,21 +184,29 @@ def filter_s1k_1_1(dataset):
 
 def filter_train_math_fr(dataset):
     n_samples = dataset.num_rows
-    # Question too short/long
-    dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 512))
-    # Solution too long
-    dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 16384))
-    # Answer too long
-    dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 512))
+    # Failed inference
+    dataset = dataset.filter(lambda x: x["solution"][-11:] != "<DISCARDED>")
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     # Invalid solution
     dataset = dataset.filter(lambda x: x["valid"])
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    # Translation length don't match
+    dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["question_en"]), get_n_tokens(x["question"]), 0.5)))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["solution_en"]), get_n_tokens(x["solution"]), 0.5)))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["answer_en"]), get_n_tokens(x["answer"]), 0.2)))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    # Question too short/long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 512))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    # Solution too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 16384))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    # Answer too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 512))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     # Not French
     dataset = dataset.filter(lambda x : x["solution_fr_lang"][0] == "__label__fra_Latn" and x["solution_fr_lang_prob"][0] > 0.98)
-    # Translation length don't match
-    dataset = dataset.filter(lambda x: (
-        similar_length(get_n_tokens(x["question"]), get_n_tokens(x["question_en"]), 0.2) and
-        similar_length(get_n_tokens(x["solution"]), get_n_tokens(x["solution_en"]), 0.2) and
-        similar_length(get_n_tokens(x["answer"]), get_n_tokens(x["answer_en"]), 0.2)
-    ))
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
