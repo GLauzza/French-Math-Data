@@ -189,7 +189,7 @@ def prepare_sorted_inference_data(dataset, chat_template_fun, batch_size=-1, inp
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
     sources = None
-    if "source" in dataset:
+    if "source" in dataset.column_names:
         sources = set(dataset["source"])
 
     return dataset, dataloader, sources

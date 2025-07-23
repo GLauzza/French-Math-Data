@@ -45,8 +45,8 @@ def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_si
                 "generation": output_text,
                 "cot_length": cot_length,
                 "is_valid": is_valid,
-                "answer": (answer, str(parsed_answer)),
-                "output": (pred, str(parsed_pred)),
+                "answer": parsed_answer[1] if len(parsed_answer) > 0 else "",
+                "pred": parsed_pred[1] if len(parsed_pred) > 0 else "",
             })
 
     for source in sources:
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     parser.add_argument('--models', nargs='+', default=default_models, help ="Models to evaluate on")
     parser.add_argument('--dataset', type=str, default="Eval-Math-FR", help='Dataset to evaluate on')
     parser.add_argument('--n', type=int, default=1, help='Number of samples per example')
-    parser.add_argument('--batch-size', type=int, default=-1, help='Batch size')
+    parser.add_argument('--batch_size', type=int, default=-1, help='Batch size')
     args = parser.parse_args()
 
     models_configs = get_configs(args.models, task="math", n=args.n)

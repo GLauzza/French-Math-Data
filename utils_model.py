@@ -64,42 +64,18 @@ def load_model(model_path, is_vllm=False):
         try:
             model = LLM(
                 config.MODEL_PATHS[0]+model_path,
-                    enable_prefix_caching=True,
-                    # config.MODEL_PATHS[1]+(model_path.split("/")[-1])+"/Qwen3-32B-Q4_K_M.gguf", 
-                    # dtype=torch.bfloat16,
-                    # trust_remote_code=True,
-                    # quantization="modelopt",
-                    # quantization="bitsandbytes",
-                    # quantization="AWQ",   
-                    # kv_cache_dtype="fp8",
-                    # calculate_kv_scales=True,
+                enable_prefix_caching=True,
             )
         except:
             try:
                 model = LLM(
                     config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
                     enable_prefix_caching=True,
-                    # config.MODEL_PATHS[1]+(model_path.split("/")[-1])+"/Qwen3-32B-Q4_K_M.gguf", 
-                    # dtype=torch.bfloat16,
-                    # trust_remote_code=True,
-                    # quantization="modelopt",
-                    # quantization="bitsandbytes",
-                    # quantization="AWQ",
-                    # kv_cache_dtype="fp8",
-                    # calculate_kv_scales=True
                 )
             except:
                 model = LLM(
                     config.MODEL_PATHS[2]+(model_path.split("/")[-1]),
                     enable_prefix_caching=True,
-                    # config.MODEL_PATHS[1]+(model_path.split("/")[-1])+"/Qwen3-32B-Q4_K_M.gguf", 
-                    # dtype=torch.bfloat16,
-                    # trust_remote_code=True,
-                    # quantization="modelopt",
-                    # quantization="bitsandbytes",
-                    # quantization="AWQ",
-                    # kv_cache_dtype="fp8",
-                    # calculate_kv_scales=True,
                 )
         print("FM - Loaded Model:", model_path)
         return model
@@ -187,106 +163,81 @@ def get_config(name, task="math", n=1, max_length=1000000):
     DEFAULT_CHAT_TEMPLATE = to_chat_template_qwen_2_5(task)
     DEFAULT_SAMPLING_PARAMS = SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=30, presence_penalty=0.5, max_tokens=min(32768, max_length), seed=0)
 
-    if name == "fasttext":
+    if name.startswith("fasttext"):
         return (
-            "facebook/fasttext-language-identification",
+            f"facebook/fasttext-language-identification",
             (lambda x: x),
             None,
         )
-    elif name == "Qwen2.5-Math-1.5B":
+    elif name.startswith("Qwen2.5-Math-1.5B"):
         return (
-            "Qwen/Qwen2.5-Math-1.5B",
+            f"Qwen/{name}",
             to_chat_template_qwen_2_5(task),
             DEFAULT_SAMPLING_PARAMS
         )
-    elif name == "Qwen2.5-7B":
+    elif name.startswith("Qwen2.5-7B"):
         return (
-            "Qwen/Qwen2.5-7B",
+            f"Qwen/{name}",
             to_chat_template_qwen_2_5(task),
             DEFAULT_SAMPLING_PARAMS
         )
-    elif name == "Qwen2.5-Math-7B-Instruct":
+    elif name.startswith("Qwen2.5-Math-7B-Instruct"):
         return (
-            "Qwen/Qwen2.5-Math-7B-Instruct",
+            f"Qwen/{name}",
             to_chat_template_qwen_2_5(task),
             DEFAULT_SAMPLING_PARAMS
         )
-    elif name == "Qwen3-8B":
-        return ( 
-            "Qwen/Qwen3-8B",
+    elif name.startswith("Qwen3"):
+        return (
+            f"Qwen/{name}",
             to_chat_template_qwen_3(task),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=min(38912, max_length), seed=0)
         )
-    elif name == "Qwen3-32B":
-        # quantize(config.MODEL_PATHS[0]+"Qwen/Qwen3-32B", config.MODEL_PATHS[1]+"Qwen3-32B-quantized", "compressor")
+    elif name.startswith("Lucie-7B-Instruct-v1.1"):
         return (
-            # "Qwen/Qwen3-32B",
-            # "Qwen/Qwen3-32B-AWQ",
-            # "Qwen/Qwen3-32B-bnb-4bit",
-            # "Qwen/Qwen3-32B-unsloth-bnb-4bit", # Unsupported in vllm yet
-            # "Qwen/Qwen3-32B-GPTQ-Int4",
-            # "Qwen/Qwen3-32B-GPTQ-Int8",
-            "Qwen/Qwen3-32B-FP8-dynamic",
-            # "Qwen/Qwen3-32B-quantized.w4a16", # Doesn't work
-            # "Qwen/Qwen3-32B.w8a8",
-            # "Qwen/Qwen3-32B-quantized",
-            # "Qwen/Qwen3-32B-GGUF",
-            # "Qwen/Qwen3-32B-FP8",
-            # "Qwen/Qwen3-32B-FP8-KV",
-            to_chat_template_qwen_3(task),
-            SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=min(38912, max_length), seed=0)
-        )
-    elif name == "Qwen3-30B-A3B":
-        return (
-            "Qwen/Qwen3-30B-A3B",
-            to_chat_template_qwen_3(task),
-            SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=min(38912, max_length), seed=0)
-        )
-    elif name == "Lucie-7B-Instruct-v1.1":
-        return (
-            "OpenLLM-France/Lucie-7B-Instruct-v1.1", 
+            f"OpenLLM-France/{name}", 
             to_chat_template_lucie(task),
             DEFAULT_SAMPLING_PARAMS
         )
-    elif name == "Phi-4-mini-reasoning":
+    elif name.startswith("Phi-4-mini-reasoning"):
         return (
-            "microsoft/Phi-4-mini-reasoning", 
+            f"microsoft/{name}", 
             to_chat_template_phi4(task),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
-    elif name == "deepseek-math-7b-instruct":
+    elif name.startswith("deepseek-math-7b-instruct"):
         return (
-            "deepseek-ai/deepseek-math-7b-instruct", 
+            f"deepseek-ai/{name}", 
             to_chat_template_deepseek(task),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
-    elif name == "DeepSeek-R1-Distill-Qwen-7B":
+    elif name.startswith("DeepSeek-R1-Distill-Qwen-7B"):
         return (
-            "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", 
+            f"deepseek-ai/{name}", 
             to_chat_template_deepseek(task),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
-    elif name == "DeepSeek-R1-Distill-Llama-8B":
+    elif name.startswith("DeepSeek-R1-Distill-Llama-8B"):
         return (
-            "deepseek-ai/DeepSeek-R1-Distill-Llama-8B", 
+            f"deepseek-ai/{name}", 
             to_chat_template_deepseek(task),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
-    elif name == "OpenR1-Distill-7B":
+    elif name.startswith("OpenR1-Distill-7B"):
         return (
-            "open-r1/OpenR1-Distill-7B", 
+            f"open-r1/{name}", 
             to_chat_template_deepseek(task),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
-    elif name == "Pensez-v0.1-e5":
+    elif name.startswith("Pensez-v0.1-e5"):
         return (
-            "HoangHa/Pensez-v0.1-e5", 
+            f"HoangHa/{name}", 
             DEFAULT_CHAT_TEMPLATE,
             SamplingParams(n=n, temperature=0.8, repetition_penalty=1.1, max_tokens=min(32768, max_length), seed=0)
         )
-    elif name == "Llama-3.1-8B-Instruct":
+    elif name.startswith("Llama-3.1-8B-Instruct"):
         return (
-            "meta-llama/Llama-3.1-8B-Instruct", 
+            f"meta-llama/{name}", 
             DEFAULT_CHAT_TEMPLATE,
             DEFAULT_SAMPLING_PARAMS
         )

@@ -186,27 +186,27 @@ def filter_train_math_fr(dataset):
     n_samples = dataset.num_rows
     # Failed inference
     dataset = dataset.filter(lambda x: x["solution"][-11:] != "<DISCARDED>")
-    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     # Invalid solution
     dataset = dataset.filter(lambda x: x["valid"])
-    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     # Translation length don't match
     dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["question_en"]), get_n_tokens(x["question"]), 0.5)))
-    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["solution_en"]), get_n_tokens(x["solution"]), 0.5)))
-    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["answer_en"]), get_n_tokens(x["answer"]), 0.2)))
-    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     # Question too short/long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 512))
-    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     # Solution too long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 16384))
-    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     # Answer too long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 512))
-    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     # Not French
     dataset = dataset.filter(lambda x : x["solution_fr_lang"][0] == "__label__fra_Latn" and x["solution_fr_lang_prob"][0] > 0.98)
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    total_tokens = 0
+    for sample in dataset:
+        total_tokens += get_n_tokens(
+            f"<|im_start|>system\nPlease reason step by step, and put your final answer within \\boxed{{}}.<|im_end|>\n"
+            f"<|im_start|>user\n{sample['question']}<|im_end|>\n"
+            f"<|im_start|>assistant\n{sample['solution']}"
+        )
+    print(f"Total tokens: {total_tokens/1000000000}B")
     return dataset

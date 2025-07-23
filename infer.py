@@ -127,7 +127,7 @@ def extract_answer(dataset, output_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Performs a task on a dataset using a model')
-    parser.add_argument('--model', type=str, default="Qwen3-8B", help='Model to use for inference')
+    parser.add_argument('--model', type=str, default="Qwen3-32B-FP8-dynamic", help='Model to use for inference')
     parser.add_argument('--dataset', type=str, default="Fused-CoT", help='Dataset to use for inference')
     parser.add_argument('--task', type=str, default="translation", choices=["translation", "math", "math_fr", "topic", "language_classification"], help='Task to prompt to the model')
     parser.add_argument('--input', type=str, default="question", help='Input to use for the task')
