@@ -19,10 +19,10 @@ conda activate vllmath
 set -x
 
 echo "SLURM: ---------------- TRANSLATING QUESTION -----------------------"
-srun python ~/git/French-Math-Data/infer.py --model [YOUR MODEL] --dataset [YOUR DATASET] --task translation --input question --name [YOUR DATASET]-FR-question --batch_size -1
+srun python ~/git/French-Math-Data/infer.py --model [YOUR MODEL] --dataset [YOUR DATASET] --task translation_question --input question --name [YOUR DATASET]-FR-question --batch_size -1
 
 echo "SLURM: ---------------- TRANSLATING ANSWER -----------------------"
-srun python ~/git/French-Math-Data/infer.py --model [YOUR MODEL] --dataset [YOUR DATASET]-FR-question --task translation --input question --name [YOUR DATASET]-FR --batch_size -1
+srun python ~/git/French-Math-Data/infer.py --model [YOUR MODEL] --dataset [YOUR DATASET]-FR-question --task translation_answer --input question --name [YOUR DATASET]-FR --batch_size -1
 
 echo "SLURM: ---------------- CLASSIFYING LANGUAGE -----------------------"
 srun python ~/git/French-Math-Data/infer.py --model fasttext --dataset [YOUR DATASET]-FR --task language_classification --input question_fr --name Raw-Train-Math-FR --batch_size 64

@@ -31,8 +31,8 @@ set -x
 # TODO FILTERING / BALANCING
 
 echo "SLURM: ---------------- TRANSLATING QUESTION -----------------------"
-#srun python ~/git/French-Math-Data/infer.py --model Qwen3-32B-FP8-dynamic --dataset Fused-CoT-Topic --task translation --input question --name Fused-CoT-FR --batch_size -1
-srun python ~/git/French-Math-Data/infer.py --model Qwen3-32B-FP8-dynamic --dataset Fused-CoT --task translation --input question --name Fused-CoT-FR --batch_size -1
+#srun python ~/git/French-Math-Data/infer.py --model Qwen3-32B-FP8-dynamic --dataset Fused-CoT-Topic --task translation_question --input question --name Fused-CoT-FR --batch_size -1
+srun python ~/git/French-Math-Data/infer.py --model Qwen3-32B-FP8-dynamic --dataset Fused-CoT --task translation_question --input question --name Fused-CoT-FR --batch_size -1
 
 
 #echo "SLURM: ----------------------- SOLVING -----------------------------"
@@ -47,7 +47,7 @@ srun python ~/git/French-Math-Data/infer.py --model Qwen3-32B-FP8-dynamic --data
 # OR
 
 echo "SLURM: ---------------- TRANSLATING SOLUTION -----------------------"
-srun python ~/git/French-Math-Data/infer.py --model Qwen3-32B-FP8-dynamic --dataset Fused-CoT-FR --task translation --input solution --name Fused-CoT-FR-Solved --batch_size -1 --chunk_size 512
+srun python ~/git/French-Math-Data/infer.py --model Qwen3-32B-FP8-dynamic --dataset Fused-CoT-FR --task translation_solution --input solution --name Fused-CoT-FR-Solved --batch_size -1 --chunk_size 512
 
 echo "SLURM: ---------------- CLASSIFYING LANGUAGE -----------------------"
 srun python ~/git/French-Math-Data/infer.py --model fasttext --dataset Fused-CoT-FR-Solved --task language_classification --input solution_fr --name Raw-Train-Math-FR --batch_size 64

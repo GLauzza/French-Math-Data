@@ -129,7 +129,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Performs a task on a dataset using a model')
     parser.add_argument('--model', type=str, default="Qwen3-32B-FP8-dynamic", help='Model to use for inference')
     parser.add_argument('--dataset', type=str, default="Fused-CoT", help='Dataset to use for inference')
-    parser.add_argument('--task', type=str, default="translation", choices=["translation", "math", "math_fr", "topic", "language_classification"], help='Task to prompt to the model')
+    parser.add_argument('--task', type=str, default="math", choices=["translation_question", "translation_solution", "translation_answer", "math", "math_fr", "topic", "language_classification"], help='Task to prompt to the model')
     parser.add_argument('--input', type=str, default="question", help='Input to use for the task')
     parser.add_argument('--name', type=str, default=None, help='Name of the new dataset')
     parser.add_argument('--batch_size', type=int, default=-1, help='Batch size')
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     model_path, chat_template_fun, sampling_params = get_config(args.model, task=args.task, n=1)
-    if args.task == "translation":
+    if "translation" in args.task:
         sampling_params = SamplingParams(
             temperature=0.3,
             top_p=0.8,
@@ -172,7 +172,7 @@ if __name__ == "__main__":
         chunk_size=args.chunk_size
     )
 
-    if args.task == "translation":
+    if "translation" in args.task:
         output_ext = "fr"
         new_dataset_ext = "FR"
     elif args.task == "math" or args.task == "math_fr":

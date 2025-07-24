@@ -23,7 +23,13 @@ SYSTEM_INSTRUCTIONS = {
         "S'il-te-plaît raisonne étape par étape, et écrit ta réponse finale à l'intérieur de \\boxed{}."
         "Tu doit penser et répondre uniquement en français."
     ),
-    "translation": (
+    "translation_question": (
+        ""
+    ),
+    "translation_solution": (
+        ""
+    ),
+    "translation_answer": (
         ""
     ),
     "topic": (
@@ -38,14 +44,27 @@ USER_INSTRUCTIONS = {
     "math_fr": (
         ""
     ),
-    "translation": (
+    "translation_question": (
+        "Please translate sentence by sentence the full following question in French.\n"
+        "- Only output the translation.\n"
+        "- Don't solve the problem, only translate.\n"
+        "- Preserve any mathematical formula formatting.\n"
+        "Question:\n"
+    ),
+    "translation_solution": (
         "Please translate sentence by sentence the full following text in French.\n"
         "- Only output the translation.\n"
         # "- Don't summarize.\n"
-        # "- Don't solve the problem, only translate.\n"
+        "- Don't solve the problem, only translate.\n"
         "- Preserve any mathematical formula formatting.\n"
         "- Don't translate what is inside \\boxed{}.\n"
         "Text:\n"
+    ),
+    "translation_answer": (
+        "Please translate sentence by sentence the full following answer in French.\n"
+        "- Only output the translation.\n"
+        "- Preserve any mathematical formula formatting.\n"
+        "Answer:\n"
     ),
     "topic": (
         "Please classify the math topics of the following text."
@@ -139,7 +158,7 @@ def to_chat_template_phi4(task):
         introduction = "Your name is Phi, an AI math expert developed by Microsoft."
     elif task == "math_fr":
         introduction = "Ton nom est Phi, une IA experte en math françaises développée par Microsoft."
-    elif task == "translation":
+    elif "translation" in task:
         introduction = "Your name is Phi, an AI translation expert developed by Microsoft."
     else:
         raise Exception("task not valid for this chat template")
