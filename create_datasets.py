@@ -22,6 +22,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Create a dataset')
     parser.add_argument('--datasets', nargs='+', default=default_datasets, help="Datasets to create")
     parser.add_argument('--model', type=str, default="", help="Which model solution to use for training dataset")
+    parser.add_argument('--rl', default=False, action="store_true")
     args = parser.parse_args()
 
     if "Fused-CoT" in args.datasets:    
@@ -267,15 +268,19 @@ if __name__ == "__main__":
         train_math_fr = train_math_fr.rename_column("question", "question_en")
         train_math_fr = train_math_fr.rename_column("question_fr", "question")
 
-        train_math_fr = train_math_fr.rename_column("answer", "answer_en")
-        train_math_fr = train_math_fr.rename_column("answer_fr" + model_ext, "answer")
+        if args.rl:
+            train_math_fr = train_math_fr.rename_column("answer", "answer_en")
+            train_math_fr = train_math_fr.rename_column("answer_fr", "answer")
+        else:
+            train_math_fr = train_math_fr.rename_column("answer", "answer_en")
+            train_math_fr = train_math_fr.rename_column("answer_fr" + model_ext, "answer")
 
-        train_math_fr = train_math_fr.rename_column("solution", "solution_en")
-        train_math_fr = train_math_fr.rename_column("solution_fr" + model_ext, "solution")
+            train_math_fr = train_math_fr.rename_column("solution", "solution_en")
+            train_math_fr = train_math_fr.rename_column("solution_fr" + model_ext, "solution")
 
-        train_math_fr = train_math_fr.rename_column("valid_fr" + model_ext, "valid")
+            train_math_fr = train_math_fr.rename_column("valid_fr" + model_ext, "valid")
 
-        train_math_fr = filter_train_math_fr(train_math_fr)
+        train_math_fr = filter_train_math_fr(train_math_fr, args.rl)
 
         train_math_fr.save_to_disk(config.DATA_PATHS[1] + "Train-Math-FR")
         train_math_fr.save_to_disk(config.DATA_PATHS[2] + "Train-Math-FR")

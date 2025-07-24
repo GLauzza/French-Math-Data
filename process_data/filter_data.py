@@ -182,31 +182,39 @@ def filter_s1k_1_1(dataset):
     return dataset
 
 
-def filter_train_math_fr(dataset):
+def filter_train_math_fr(dataset, rl):
     n_samples = dataset.num_rows
     # Failed inference
-    dataset = dataset.filter(lambda x: x["solution"][-11:] != "<DISCARDED>")
+    if not rl:
+        dataset = dataset.filter(lambda x: x["solution"][-11:] != "<DISCARDED>")
     # Invalid solution
-    dataset = dataset.filter(lambda x: x["valid"])
+    if not rl:
+        dataset = dataset.filter(lambda x: x["valid"])
     # Translation length don't match
     dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["question_en"]), get_n_tokens(x["question"]), 0.5)))
-    dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["solution_en"]), get_n_tokens(x["solution"]), 0.5)))
+    if not rl:
+        dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["solution_en"]), get_n_tokens(x["solution"]), 0.5)))
     dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["answer_en"]), get_n_tokens(x["answer"]), 0.2)))
     # Question too short/long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 512))
     # Solution too long
-    dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 16384))
+    if not rl:
+        dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 16384))
     # Answer too long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 512))
     # Not French
-    dataset = dataset.filter(lambda x : x["solution_fr_lang"][0] == "__label__fra_Latn" and x["solution_fr_lang_prob"][0] > 0.98)
+    if rl:
+        dataset = dataset.filter(lambda x : x["answer_fr_lang"][0] == "__label__fra_Latn" and x["answer_fr_lang_prob"][0] > 0.9)
+    else:
+        dataset = dataset.filter(lambda x : x["solution_fr_lang"][0] == "__label__fra_Latn" and x["solution_fr_lang_prob"][0] > 0.98)
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
-    total_tokens = 0
-    for sample in dataset:
-        total_tokens += get_n_tokens(
-            f"<|im_start|>system\nPlease reason step by step, and put your final answer within \\boxed{{}}.<|im_end|>\n"
-            f"<|im_start|>user\n{sample['question']}<|im_end|>\n"
-            f"<|im_start|>assistant\n{sample['solution']}"
-        )
-    print(f"Total tokens: {total_tokens/1000000000}B")
+    if not rl:
+        total_tokens = 0
+        for sample in dataset:
+            total_tokens += get_n_tokens(
+                f"<|im_start|>system\nPlease reason step by step, and put your final answer within \\boxed{{}}.<|im_end|>\n"
+                f"<|im_start|>user\n{sample['question']}<|im_end|>\n"
+                f"<|im_start|>assistant\n{sample['solution']}"
+            )
+        print(f"Total tokens: {total_tokens/1000000000}B")
     return dataset

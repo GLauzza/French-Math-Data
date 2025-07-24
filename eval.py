@@ -40,13 +40,19 @@ def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_si
             cot_length = len(output_id)
             accuracies[source] += is_valid
             cot_lengths[source] += cot_length
+            if len(parsed_answer) == 1:
+                print("len = 1 answer") 
+                print(parsed_answer[0])
+            if len(parsed_pred) == 1:
+                print("len = 1 pred") 
+                print(parsed_pred[0])
             samples[source].append({
                 "input": input_text,
                 "generation": output_text,
                 "cot_length": cot_length,
                 "is_valid": is_valid,
-                "answer": parsed_answer[1] if len(parsed_answer) > 0 else "",
-                "pred": parsed_pred[1] if len(parsed_pred) > 0 else "",
+                "answer": parsed_answer[1] if len(parsed_answer) > 1 else parsed_answer[0] if len(parsed_answer) > 0  else "",
+                "pred": parsed_pred[1] if len(parsed_pred) > 1 else parsed_pred[0] if len(parsed_pred) > 0 else "",
             })
 
     for source in sources:

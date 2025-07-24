@@ -169,19 +169,7 @@ def get_config(name, task="math", n=1, max_length=1000000):
             (lambda x: x),
             None,
         )
-    elif name.startswith("Qwen2.5-Math-1.5B"):
-        return (
-            f"Qwen/{name}",
-            to_chat_template_qwen_2_5(task),
-            DEFAULT_SAMPLING_PARAMS
-        )
-    elif name.startswith("Qwen2.5-7B"):
-        return (
-            f"Qwen/{name}",
-            to_chat_template_qwen_2_5(task),
-            DEFAULT_SAMPLING_PARAMS
-        )
-    elif name.startswith("Qwen2.5-Math-7B-Instruct"):
+    elif name.startswith("Qwen2.5"):
         return (
             f"Qwen/{name}",
             to_chat_template_qwen_2_5(task),
@@ -193,54 +181,44 @@ def get_config(name, task="math", n=1, max_length=1000000):
             to_chat_template_qwen_3(task),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=min(38912, max_length), seed=0)
         )
-    elif name.startswith("Lucie-7B-Instruct-v1.1"):
+    elif name.startswith("Lucie"):
         return (
             f"OpenLLM-France/{name}", 
             to_chat_template_lucie(task),
             DEFAULT_SAMPLING_PARAMS
         )
-    elif name.startswith("Phi-4-mini-reasoning"):
+    elif name.startswith("Phi-4"):
         return (
             f"microsoft/{name}", 
             to_chat_template_phi4(task),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
-    elif name.startswith("deepseek-math-7b-instruct"):
+    elif name.startswith("deepseek-math") or name.startswith("DeepSeek-R1"):
         return (
             f"deepseek-ai/{name}", 
             to_chat_template_deepseek(task),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
-    elif name.startswith("DeepSeek-R1-Distill-Qwen-7B"):
-        return (
-            f"deepseek-ai/{name}", 
-            to_chat_template_deepseek(task),
-            SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
-        )
-    elif name.startswith("DeepSeek-R1-Distill-Llama-8B"):
-        return (
-            f"deepseek-ai/{name}", 
-            to_chat_template_deepseek(task),
-            SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
-        )
-    elif name.startswith("OpenR1-Distill-7B"):
+    elif name.startswith("OpenR1"):
         return (
             f"open-r1/{name}", 
             to_chat_template_deepseek(task),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
-    elif name.startswith("Pensez-v0.1-e5"):
+    elif name.startswith("Pensez"):
         return (
             f"HoangHa/{name}", 
             DEFAULT_CHAT_TEMPLATE,
             SamplingParams(n=n, temperature=0.8, repetition_penalty=1.1, max_tokens=min(32768, max_length), seed=0)
         )
-    elif name.startswith("Llama-3.1-8B-Instruct"):
+    elif name.startswith("Llama"):
         return (
             f"meta-llama/{name}", 
             DEFAULT_CHAT_TEMPLATE,
             DEFAULT_SAMPLING_PARAMS
         )
+    else:
+        raise Exception(f"Model {name} not supported. Edit utils_model.py to add support.")
 
 def get_configs(names, task="math", n=1, max_length=1000000):
     configs = []
