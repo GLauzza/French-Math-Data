@@ -7,7 +7,6 @@ from vllm.distributed.parallel_state import destroy_model_parallel, destroy_dist
 import fasttext
 
 import config
-# from quantize import quantize
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"

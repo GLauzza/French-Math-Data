@@ -37,7 +37,7 @@ def hf_to_nemo(dataset, output_path, chat_template_fun, tokenizer):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Transform a dataset from Huggingface format to Nemo finetuning format')
     parser.add_argument('--model', type=str, default="Qwen3-8B", help='Model to use for chat template')
-    parser.add_argument('--dataset', type=str, default="Fused-CoT", help='Dataset to transform')
+    parser.add_argument('--dataset', type=str, default="Train-Math-FR", help='Dataset to transform')
     args = parser.parse_args()
 
     model_path, chat_template_fun, _ = get_config(args.model, task="math")

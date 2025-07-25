@@ -36,7 +36,10 @@ def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_si
             answer = to_latex(answer)
             parsed_pred = parse(pred)
             parsed_answer = parse(answer)
-            is_valid = verify(parsed_answer, parsed_pred)
+            try:
+                is_valid = verify(parsed_answer, parsed_pred)
+            except Exception as e:
+                is_valid = "unknown"
             cot_length = len(output_id)
             accuracies[source] += is_valid
             cot_lengths[source] += cot_length
@@ -54,6 +57,9 @@ def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_si
                 "answer": parsed_answer[1] if len(parsed_answer) > 1 else parsed_answer[0] if len(parsed_answer) > 0  else "",
                 "pred": parsed_pred[1] if len(parsed_pred) > 1 else parsed_pred[0] if len(parsed_pred) > 0 else "",
             })
+            if is_valid == "unknown":
+                print(f"Could not verify (error{e}):\n{samples[source][-1]['answer']}\n{samples[source][-1]['pred']}")
+
 
     for source in sources:
         n_source = len(dataset.filter(lambda x: x["source"] == source))
@@ -89,7 +95,7 @@ def eval_models(models_configs, dataset_name, batch_size):
             json.dump(output, f)
         print("FM - Dumped", output)
 
-    shutil.copy(config.DATA_PATHS[1] + dataset_name + "/eval.json", config.DATA_PATHS[2] + dataset_name + "/eval.json")
+        shutil.copy(config.DATA_PATHS[1] + dataset_name + "/eval.json", config.DATA_PATHS[2] + dataset_name + "/eval.json")
 
 
 if __name__ == "__main__":
