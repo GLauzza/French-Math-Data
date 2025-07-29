@@ -10,6 +10,5 @@ from transformers import AutoTokenizer
 
 # Jean Zay
 DATA_PATHS = [os.environ["DSDIR"] + "/HuggingFace/", os.environ["SCRATCH"] + "/Datasets/", os.environ["WORK"] + "/Datasets/"]
-# MODEL_PATHS = [os.environ["DSDIR"] + "/HuggingFace_Models/", os.environ["SCRATCH"] + "/Models/", os.environ["WORK"] + "/Models/"]
-MODEL_PATHS = [os.environ["DSDIR"], os.environ["SCRATCH"] + "/Models/", os.environ["WORK"] + "/Models/"]
+MODEL_PATHS = [os.environ["DSDIR"] + "/HuggingFace_Models/", os.environ["SCRATCH"] + "/Models/", os.environ["WORK"] + "/Models/"]
 TOKENIZER =  AutoTokenizer.from_pretrained(os.environ["DSDIR"] + "/HuggingFace_Models/Qwen/Qwen3-8B")

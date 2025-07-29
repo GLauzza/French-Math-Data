@@ -17,6 +17,7 @@ torch.cuda.manual_seed_all(0)
 SYSTEM_INSTRUCTIONS = {
     "math": (
         "Please reason step by step, and put your final answer within \\boxed{}."
+        #""
     ),
     "math_fr": (
         "S'il-te-plaît raisonne étape par étape, et écrit ta réponse finale à l'intérieur de \\boxed{}."
@@ -39,6 +40,7 @@ SYSTEM_INSTRUCTIONS = {
 USER_INSTRUCTIONS = {
     "math": (
         ""
+        #"Solve the follow-ing math problem efficiently and clearly. The last line of your response should be of the following format: 'Therefore, the final answer is: $\\boxed{{ANSWER}}$. I hope it is correct' (without quotes) where ANSWER is just the final number or expression that solves the problem. Think step by step before answering.\n "
     ),
     "math_fr": (
         ""
@@ -83,17 +85,44 @@ def load_model(model_path, is_vllm=False):
             model = LLM(
                 config.MODEL_PATHS[0]+model_path,
                 enable_prefix_caching=True,
+                # dtype="float32",
+                # enforce_eager=True,
+                # tensor_parallel_size=1,
+                # distributed_executor_backend="mp",  # multiprocessing, more isolated
+                # # worker_use_ray=False,
+                # disable_custom_all_reduce=True,  # Avoids custom NCCL kernels
+                # # speculative_model=None, 
+                # # num_speculative_tokens=0,
+                seed=0,
             )
         except:
             try:
                 model = LLM(
                     config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
                     enable_prefix_caching=True,
+                    # dtype="float32",
+                    # enforce_eager=True,
+                    # tensor_parallel_size=1,
+                    # distributed_executor_backend="mp",  # multiprocessing, more isolated
+                    # # worker_use_ray=False,
+                    # disable_custom_all_reduce=True,  # Avoids custom NCCL kernels
+                    # # speculative_model=None, 
+                    # # num_speculative_tokens=0,
+                    seed=0,
                 )
             except:
                 model = LLM(
                     config.MODEL_PATHS[2]+(model_path.split("/")[-1]),
                     enable_prefix_caching=True,
+                    # dtype="float32",
+                    # enforce_eager=True,
+                    # tensor_parallel_size=1,
+                    # distributed_executor_backend="mp",
+                    # # worker_use_ray=False,
+                    # disable_custom_all_reduce=True,  # Avoids custom NCCL kernels
+                    # # speculative_model=None, 
+                    # # num_speculative_tokens=0,
+                    seed=0,
                 )
         print("FM - Loaded Model:", model_path)
         return model

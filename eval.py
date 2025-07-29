@@ -4,12 +4,23 @@ import argparse
 
 from tqdm import tqdm
 from math_verify import parse, verify
+import torch
+import random
+import numpy as np
 
 import config
 from process_data.extract_answer import *
 from process_data.prepare_data import *
 from utils_model import *
 
+# random.seed(0)
+# np.random.seed(0)
+# torch.manual_seed(0)
+# torch.cuda.manual_seed_all(0)
+# torch.backends.cudnn.deterministic = True
+# torch.backends.cudnn.benchmark = False
+# torch.backends.cuda.matmul.allow_tf32 = False  # Avoid TF32 imprecision
+# torch.backends.cudnn.allow_tf32 = False
 
 def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_size):
     dataset = load_data(dataset_name)
@@ -59,6 +70,7 @@ def eval_model(model, chat_template_fun, sampling_params, dataset_name, batch_si
             })
             if is_valid == "unknown":
                 print(f"Could not verify (error{e}):\n{samples[source][-1]['answer']}\n{samples[source][-1]['pred']}")
+            print(f"Sample: {samples[source][-1]}")
 
 
     for source in sources:
@@ -93,7 +105,7 @@ def eval_models(models_configs, dataset_name, batch_size):
         print("FM - Dumping:", model_path, dataset_name)
         with open(json_path, 'w') as f:
             json.dump(output, f)
-        print("FM - Dumped", output)
+        print("FM - Dumped")
 
         shutil.copy(config.DATA_PATHS[1] + dataset_name + "/eval.json", config.DATA_PATHS[2] + dataset_name + "/eval.json")
 
