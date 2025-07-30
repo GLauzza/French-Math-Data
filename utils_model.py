@@ -17,7 +17,6 @@ torch.cuda.manual_seed_all(0)
 SYSTEM_INSTRUCTIONS = {
     "math": (
         "Please reason step by step, and put your final answer within \\boxed{}."
-        #""
     ),
     "math_fr": (
         "S'il-te-plaît raisonne étape par étape, et écrit ta réponse finale à l'intérieur de \\boxed{}."
@@ -40,7 +39,6 @@ SYSTEM_INSTRUCTIONS = {
 USER_INSTRUCTIONS = {
     "math": (
         ""
-        #"Solve the follow-ing math problem efficiently and clearly. The last line of your response should be of the following format: 'Therefore, the final answer is: $\\boxed{{ANSWER}}$. I hope it is correct' (without quotes) where ANSWER is just the final number or expression that solves the problem. Think step by step before answering.\n "
     ),
     "math_fr": (
         ""
@@ -212,7 +210,7 @@ def get_config(name, task="math", n=1, max_length=1000000):
 
     if name.startswith("fasttext"):
         return (
-            f"facebook/fasttext-language-identification",
+            f"facebook/fasttext-language-identification",   
             (lambda x: x),
             None,
         )
