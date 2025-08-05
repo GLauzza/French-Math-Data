@@ -13,3 +13,6 @@ eval.json
 
 # Topics
 wiki_topic/
+
+# Figures
+*.png

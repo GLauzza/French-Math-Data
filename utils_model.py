@@ -79,51 +79,53 @@ def load_model(model_path, is_vllm=False):
     if model_path == "facebook/fasttext-language-identification":
         return fasttext.load_model(config.MODEL_PATHS[0]+model_path+"/model.bin")
     elif is_vllm:
-        try:
-            model = LLM(
-                config.MODEL_PATHS[0]+model_path,
-                enable_prefix_caching=True,
-                # dtype="float32",
-                # enforce_eager=True,
-                # tensor_parallel_size=1,
-                # distributed_executor_backend="mp",  # multiprocessing, more isolated
-                # # worker_use_ray=False,
-                # disable_custom_all_reduce=True,  # Avoids custom NCCL kernels
-                # # speculative_model=None, 
-                # # num_speculative_tokens=0,
-                seed=0,
-            )
-        except:
+        if "embed" in model_path.lower():
             try:
                 model = LLM(
-                    config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
+                    config.MODEL_PATHS[0]+model_path,
                     enable_prefix_caching=True,
-                    # dtype="float32",
-                    # enforce_eager=True,
-                    # tensor_parallel_size=1,
-                    # distributed_executor_backend="mp",  # multiprocessing, more isolated
-                    # # worker_use_ray=False,
-                    # disable_custom_all_reduce=True,  # Avoids custom NCCL kernels
-                    # # speculative_model=None, 
-                    # # num_speculative_tokens=0,
+                    task="embed",
                     seed=0,
                 )
             except:
+                try:
+                    model = LLM(
+                        config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
+                        enable_prefix_caching=True,
+                        task="embed",
+                        seed=0,
+                    )
+                except:
+                    model = LLM(
+                        config.MODEL_PATHS[2]+(model_path.split("/")[-1]),
+                        enable_prefix_caching=True,
+                        task="embed",
+                        seed=0,
+                    )
+            print("FM - Loaded Model:", model_path)
+            return model
+        else:
+            try:
                 model = LLM(
-                    config.MODEL_PATHS[2]+(model_path.split("/")[-1]),
+                    config.MODEL_PATHS[0]+model_path,
                     enable_prefix_caching=True,
-                    # dtype="float32",
-                    # enforce_eager=True,
-                    # tensor_parallel_size=1,
-                    # distributed_executor_backend="mp",
-                    # # worker_use_ray=False,
-                    # disable_custom_all_reduce=True,  # Avoids custom NCCL kernels
-                    # # speculative_model=None, 
-                    # # num_speculative_tokens=0,
                     seed=0,
                 )
-        print("FM - Loaded Model:", model_path)
-        return model
+            except:
+                try:
+                    model = LLM(
+                        config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
+                        enable_prefix_caching=True,
+                        seed=0,
+                    )
+                except:
+                    model = LLM(
+                        config.MODEL_PATHS[2]+(model_path.split("/")[-1]),
+                        enable_prefix_caching=True,
+                        seed=0,
+                    )
+            print("FM - Loaded Model:", model_path)
+            return model
     else:
         try:
             tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[0]+model_path, padding_side='left')
@@ -219,6 +221,12 @@ def get_config(name, task="math", n=1, max_length=1000000):
             f"Qwen/{name}",
             to_chat_template_qwen_2_5(task),
             DEFAULT_SAMPLING_PARAMS
+        )
+    elif name.startswith("Qwen3-Embedding"):
+        return (
+            f"Qwen/{name}",
+            None,
+            None
         )
     elif name.startswith("Qwen3"):
         return (

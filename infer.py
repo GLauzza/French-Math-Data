@@ -157,7 +157,7 @@ if __name__ == "__main__":
 
     model = load_model(model_path, is_vllm=True)    
 
-    raw_dataset = load_data(args.dataset).shuffle(seed=0)
+    raw_dataset = load_data(args.dataset).shuffle(seed=0).select(range(1000))
     dataset, dataloader, _ = prepare_inference_data(
         raw_dataset,
         chat_template_fun,
