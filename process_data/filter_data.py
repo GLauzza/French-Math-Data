@@ -218,3 +218,15 @@ def filter_train_math_fr(dataset, rl):
             )
         print(f"Total tokens: {total_tokens/1000000000}B")
     return dataset
+
+
+def filter_train_math_en(dataset):
+    n_samples = dataset.num_rows
+    # Question too short/long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 512))
+    # Solution too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 16384))
+    # Answer too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 512))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    return dataset

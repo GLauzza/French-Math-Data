@@ -23,6 +23,8 @@ if __name__ == "__main__":
     parser.add_argument('--datasets', nargs='+', default=default_datasets, help="Datasets to create")
     parser.add_argument('--model', type=str, default="", help="Which model solution to use for training dataset")
     parser.add_argument('--rl', default=False, action="store_true")
+    parser.add_argument('--fr_ratio', type=float, default=0.5, help="Percentage of french for train dataset")
+    parser.add_argument('--n', type=float, default=-1, help="Number of samples in the dataset")
     args = parser.parse_args()
 
     if "Fused-CoT" in args.datasets:    
@@ -192,7 +194,9 @@ if __name__ == "__main__":
             # },
         ]
         fused_cot = fusion_datasets(cot_datasets)
-        fused_cot = fused_cot.filter(lambda x: x["solution"] is not None)
+        fused_cot = fused_cot.filter(lambda x: x["solution"] is not None).shuffle(seed=0)
+        if args.n != -1:
+            fused_cot = fused_cot.select(range(args.n))
         fused_cot.save_to_disk(config.DATA_PATHS[1] + "Fused-CoT")
         fused_cot.save_to_disk(config.DATA_PATHS[2] + "Fused-CoT")
 
@@ -258,11 +262,13 @@ if __name__ == "__main__":
                 "source": ["polymath/" + (identifier).split("-")[0] for identifier in polymath["id"]],
             }
         ]
-        eval_math_fr = fusion_datasets(eval_math_fr_datasets)
+        eval_math_fr = fusion_datasets(eval_math_fr_datasets).shuffle(seed=0)
+        if nargs.n != -1:
+            eval_math_fr = eval_math_fr.select(range(args.n))
         eval_math_fr.save_to_disk(config.DATA_PATHS[1] + "Eval-Math-FR")
         eval_math_fr.save_to_disk(config.DATA_PATHS[2] + "Eval-Math-FR")
 
-    if "Train-Math-FR" in args.datasets:
+    if "Train-Math" in args.datasets:
         model_ext = "_"*(len(args.model) > 0) + args.model
         train_math_fr = load_data("Raw-Train-Math-FR")
         train_math_fr = train_math_fr.rename_column("question", "question_en")
@@ -280,8 +286,37 @@ if __name__ == "__main__":
 
             train_math_fr = train_math_fr.rename_column("valid_fr" + model_ext, "valid")
 
-        train_math_fr = filter_train_math_fr(train_math_fr, args.rl)
+        train_math_fr = filter_train_math_fr(train_math_fr, args.rl).shuffle(seed=0)
+        if args.n != -1:
+            train_math_fr = train_math_fr.select(range(int(args.n*args.fr_ratio)))
+        train_math_en = load_data("Fused-CoT")
+        used_question = set(train_math_fr["question_en"])
+        train_math_en = train_math_en.filter(lambda x: x["question"] not in used_question)
+        train_math_en = filter_train_math_en(train_math_en).shuffle(seed=0).select(range(int((len(train_math_fr)/args.fr_ratio)*(1-args.fr_ratio))))
 
-        train_math_fr.save_to_disk(config.DATA_PATHS[1] + "Train-Math-FR")
-        train_math_fr.save_to_disk(config.DATA_PATHS[2] + "Train-Math-FR")
+        train_math_datasets = [
+            {
+                "name": "deepmath",
+                "dataset": train_math_fr,
+                "question": train_math_fr["question"],
+                "answer": train_math_fr["answer"],
+                "solution": train_math_fr["solution"],
+                "source": ["deepmath"] * len(train_math_fr),
+                "model": ["deepseek-r1"] * len(train_math_fr),
+            },
+            {
+                "name": "deepmath",
+                "dataset": train_math_en,
+                "question": train_math_en["question"],
+                "answer": train_math_en["answer"],
+                "solution": train_math_en["solution"],
+                "source": ["deepmath"] * len(train_math_en),
+                "model": ["deepseek-r1"] * len(train_math_en),
+            },
+        ]
+
+        train_math = fusion_datasets(train_math_datasets)
+
+        train_math.save_to_disk(config.DATA_PATHS[1] + "Train-Math")
+        train_math.save_to_disk(config.DATA_PATHS[2] + "Train-Math")
 

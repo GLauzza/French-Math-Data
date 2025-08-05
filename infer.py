@@ -149,18 +149,15 @@ if __name__ == "__main__":
         )
     elif args.task == "topic":
         sampling_params = SamplingParams(
-            temperature=0.5,
-            top_p=0.8, 
-            top_k=10, 
-            min_p=0, 
-            max_tokens=64,
+            temperature=0.0,
+            max_tokens=256,
             seed=0,
             guided_decoding=GuidedDecodingParams(grammar=get_topic_grammar())
         )
 
-    model = load_model(model_path, is_vllm=True)
+    model = load_model(model_path, is_vllm=True)    
 
-    raw_dataset = load_data(args.dataset).shuffle(seed=42)
+    raw_dataset = load_data(args.dataset).shuffle(seed=0)
     dataset, dataloader, _ = prepare_inference_data(
         raw_dataset,
         chat_template_fun,
