@@ -69,7 +69,7 @@ USER_INSTRUCTIONS = {
         "Please classify the math topics of the following text."
         "Only output the topics as a single list separated by commas."
         "The text should be classified into 1 to 10 topics."
-        "(e.g 'Linear Algebra, Inequalities, Computer Science, Projections')"
+        "(e.g 'Linear algebra, Inequalities, Computer science, Projections')"
     ),
 }
 

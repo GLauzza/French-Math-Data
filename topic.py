@@ -2,6 +2,8 @@ import os
 import argparse
 
 from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+import umap
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -136,14 +138,70 @@ def get_topic_grammar():
 
 
 def plot_topic_embedding(model, dataset):
-    topics = get_topics()
-    embs = [result.outputs.embedding for result in model.embed(topics)]
-    
-    pca = PCA(n_components=2)    
-    embs_2d = pca.fit_transform(np.array(embs))
+    to_2d = TSNE(n_components=2)   
+    # to_2d = umap.UMAP(
+    #     n_components=2,           # Number of dimensions to reduce to
+    #     n_neighbors=40,           # Balance local vs global structure
+    #     min_dist=0.5,             # Minimum distance between points
+    #     metric='cosine',       # Distance metric
+    #     random_state=0           # For reproducibility
+    # )
+    # to_2d = PCA(n_components=2)
 
-    plt.scatter(embs_2d[:,0], embs_2d[:,1])
-    plt.savefig(curr_dir+"/embeddings.png")
+    topics = get_topics()
+    topic_to_id = {topic:i for i, topic in enumerate(topics)}
+
+    embs_topics = [result.outputs.embedding for result in model.embed(topics)]
+    embs_topic_2d = to_2d.fit_transform(np.array(embs_topics))
+    # embs_data = [result.outputs.embedding for result in model.embed(dataset["question"])]
+    # embs_data_2d = to_2d.transform(np.array(embs_data))
+    # embs = to_2d.fit_transform(np.concatenate([embs_topics, embs_data], axis=0))
+    # embs_topic_2d = embs[:len(embs_topics)]
+    # embs_data_2d = embs[len(embs_topics):]
+
+
+    embs_data_2d = []
+    for sample in dataset:
+        for topic in sample["question_topic"].split(", "):
+            if topic[-1] == "." and topic not in topics:
+                embs_data_2d.append(embs_topic_2d[topic_to_id[topic[:-1]]])
+            elif topic in topics:
+                embs_data_2d.append(embs_topic_2d[topic_to_id[topic]])
+            else:
+                print(f"{topic} not in topics.")
+    embs_data_2d = np.array(embs_data_2d)
+    
+    plt.scatter(embs_topic_2d[:,0], embs_topic_2d[:,1], s=1, alpha=0.1, label="topic")
+    plt.scatter(embs_data_2d[:,0], embs_data_2d[:,1], s=1, alpha=0.2, label="question")
+    plt.savefig("embeddings.png", dpi=500)
+    plt.show()
+
+    kde = KernelDensity(bandwidth=0.1).fit(embs_topic_2d)
+    log_density = np.exp(kde.score_samples(embs_topic_2d))
+    topic_sampling = (1/(log_density))/sum(1/log_density)
+    embs_uniform = []
+    for idx in np.random.choice(len(embs_topic_2d), p=topic_sampling, size=10000, replace=True):
+        embs_uniform.append(embs_topic_2d[idx])
+    embs_uniform = np.array(embs_uniform)
+    plt.scatter(embs_uniform[:,0], embs_uniform[:,1], s=20, alpha=0.05)
+    plt.savefig("topic_sampling.png", dpi=500)
+    plt.show()
+
+    for idx in np.random.choice(len(embs_topic_2d), p=topic_sampling, size=300, replace=False):
+        x, y = embs_topic_2d[idx, 0], embs_topic_2d[idx, 1]
+        plt.scatter(x, y, c='red', s=0)  # Highlight labeled points
+        plt.annotate(
+            topics[idx],
+            (x, y),
+            textcoords="offset points",
+            xytext=(0, 0),
+            fontsize=1,
+            color='red',
+            alpha=0.4,
+            weight='normal'
+        )
+    plt.savefig("topic_dist.png", dpi=500)
+    plt.show()
 
 
 if __name__ == "__main__":
