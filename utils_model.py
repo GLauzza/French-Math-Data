@@ -34,6 +34,12 @@ SYSTEM_INSTRUCTIONS = {
     "topic": (
         ""
     ),
+    "difficulty": (
+        ""
+    ),
+    "knowledge": (
+        ""
+    ),
 }
 
 USER_INSTRUCTIONS = {
@@ -70,6 +76,17 @@ USER_INSTRUCTIONS = {
         "Only output the topics as a single list separated by commas."
         "The text should be classified into 1 to 10 topics."
         "(e.g 'Linear algebra, Inequalities, Computer science, Projections')"
+    ),
+    "difficulty": (
+        "Please classify the math difficulty level of the following text."
+        "Only output the math difficulty level."
+        "The math difficulty level should be classified as either n-th grade, n-th year undergrad, Master, PhD, AMC-n, AIME, USAJMO, USAMO, MOP, IMO or Putnam."
+    ),
+    "knowledge": (
+        "We define a piece of knowledge as either a theorem, a fact, a relationship, a formula, a logical procedure or a definition."
+        "Please give the number of pieces of knowledge that are used in this solution."
+        "Don't count twice same pieces of knowledge, make sure every piece is unique and needed to solve the problem."
+        "Only output the number of pieces of knowledge."
     ),
 }
 

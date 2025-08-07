@@ -10,7 +10,7 @@ import config
 from utils_model import *
 from process_data.prepare_data import *
 from process_data.extract_answer import *
-from topic import *
+from diversify import *
 
 
 def classify(model, dataset, dataloader, output_name):
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Performs a task on a dataset using a model')
     parser.add_argument('--model', type=str, default="Qwen3-32B-FP8-dynamic", help='Model to use for inference')
     parser.add_argument('--dataset', type=str, default="Fused-CoT", help='Dataset to use for inference')
-    parser.add_argument('--task', type=str, default="math", choices=["translation_question", "translation_solution", "translation_answer", "math", "math_fr", "topic", "language_classification"], help='Task to prompt to the model')
+    parser.add_argument('--task', type=str, default="math", help='Task to prompt to the model')
     parser.add_argument('--input', type=str, default="question", help='Input to use for the task')
     parser.add_argument('--name', type=str, default=None, help='Name of the new dataset')
     parser.add_argument('--batch_size', type=int, default=-1, help='Batch size')
@@ -147,17 +147,17 @@ if __name__ == "__main__":
             max_tokens=(2*args.chunk_size if args.chunk_size != -1 else 32768 if args.input == "solution" else 1024),
             seed=0
         )
-    elif args.task == "topic":
+    elif args.task == "topic" or args.task == "difficulty" or args.task == "knowledge":
         sampling_params = SamplingParams(
             temperature=0.0,
             max_tokens=256,
             seed=0,
-            guided_decoding=GuidedDecodingParams(grammar=get_topic_grammar())
+            guided_decoding=GuidedDecodingParams(grammar=get_grammar(args.task))
         )
 
     model = load_model(model_path, is_vllm=True)    
 
-    raw_dataset = load_data(args.dataset).shuffle(seed=0).select(range(1000))
+    raw_dataset = load_data(args.dataset).shuffle(seed=0).select(range(3000))
     dataset, dataloader, _ = prepare_inference_data(
         raw_dataset,
         chat_template_fun,
@@ -181,6 +181,14 @@ if __name__ == "__main__":
     elif args.task == "topic":    
         output_ext = "topic"
         new_dataset_ext = "Topic"
+    elif args.task == "difficulty":
+        output_ext = "difficulty"
+        new_dataset_ext = "Difficulty"
+    elif args.task == "knowledge":
+        output_ext = "knowledge"
+        new_dataset_ext = "Knowledge"
+    else:
+        raise Exception(f"Task {args.task} not supported.")
     output_name = args.input + "_" + output_ext
     new_dataset_name = args.dataset + "-" + new_dataset_ext
     if args.name:
