@@ -147,7 +147,13 @@ if __name__ == "__main__":
             max_tokens=(2*args.chunk_size if args.chunk_size != -1 else 32768 if args.input == "solution" else 1024),
             seed=0
         )
-    elif args.task == "topic" or args.task == "difficulty" or args.task == "knowledge":
+    elif (
+        args.task == "topic" or
+        args.task == "difficulty" or 
+        args.task == "knowledge" or 
+        args.task == "steps" or
+        args.task == "quality"
+    ):
         sampling_params = SamplingParams(
             temperature=0.0,
             max_tokens=256,
@@ -157,7 +163,7 @@ if __name__ == "__main__":
 
     model = load_model(model_path, is_vllm=True)    
 
-    raw_dataset = load_data(args.dataset).shuffle(seed=0).select(range(3000))
+    raw_dataset = load_data(args.dataset).shuffle(seed=0).select(range(500))
     dataset, dataloader, _ = prepare_inference_data(
         raw_dataset,
         chat_template_fun,
@@ -175,20 +181,9 @@ if __name__ == "__main__":
     elif args.task == "math" or args.task == "math_fr":
         output_ext = args.model
         new_dataset_ext = "Solved"
-    elif args.task == "language_classification":    
-        output_ext = "lang"
-        new_dataset_ext = "Lang"
-    elif args.task == "topic":    
-        output_ext = "topic"
-        new_dataset_ext = "Topic"
-    elif args.task == "difficulty":
-        output_ext = "difficulty"
-        new_dataset_ext = "Difficulty"
-    elif args.task == "knowledge":
-        output_ext = "knowledge"
-        new_dataset_ext = "Knowledge"
     else:
-        raise Exception(f"Task {args.task} not supported.")
+        output_ext = args.task
+        new_dataset_ext = args.task.capitalize()
     output_name = args.input + "_" + output_ext
     new_dataset_name = args.dataset + "-" + new_dataset_ext
     if args.name:

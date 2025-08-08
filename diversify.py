@@ -4,6 +4,7 @@ import argparse
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.neighbors import KernelDensity
+from sklearn.feature_extraction.text import TfidfVectorizer
 import umap
 import numpy as np
 import matplotlib.pyplot as plt
@@ -144,12 +145,19 @@ def get_grammar(grammar_name):
             number_1_to_12 ::= number_1_to_4 | "5th" | "6th" | "7th" | "8th" | "9th" | "10th" | "11th" | "12th"
             amc_number ::= "8" | "10" | "12"
         """
-    elif grammar_name == "knowledge":
+    elif grammar_name == "knowledge" or grammar_name == "steps":
         return f"""
             root ::= non_null_digit (digit)*
             non_null_digit ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
             digit ::= "0" | non_null_digit
         """
+    elif grammar_name == "quality":
+        return f"""
+            root ::= "Correct" | "Incorrect"
+        """
+        # return f"""
+        #     root ::= "Upvote" | "Keep" | "Downvote" | "Remove"
+        # """
     else:
         raise Exception(f"Grammar {grammar_name} not supported")
 
@@ -268,6 +276,17 @@ def plot_embedding(model, dataset):
     plt.close()
 
 
+def tok_dist(tokenizer, dataset):
+    vectorizer = TfidfVectorizer(tokenizer=tokenizer.tokenize, lowercase=False)
+    freq = vectorizer.fit_transform(dataset["solution"])
+    to_2d = TSNE(n_components=2)   
+    freq_2d = to_2d.fit_transform(np.array(freq))
+    plt.scatter(freq_2d[:,0], freq_2d[:,1], s=1, alpha=0.1)
+    plt.savefig(curr_dir+"/tok_dist.png", dpi=500)
+    plt.close()
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Allows to download or plot embedding of topics')
     parser.add_argument('--model', type=str, default="Qwen3-Embedding-8B", help='Model to use for getting the embedding')
@@ -281,3 +300,8 @@ if __name__ == "__main__":
         model_path, _, _ = get_config(args.model)
         model = load_model(model_path, is_vllm=True)
         plot_embedding(model, dataset)
+    elif args.action == "dist":
+        dataset = load_data(args.dataset)
+        model_path, _, _ = get_config(args.model)
+        model, tokenizer = load_model(model_path)
+        plot_embedding(tokenizer, dataset)

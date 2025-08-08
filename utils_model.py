@@ -40,6 +40,12 @@ SYSTEM_INSTRUCTIONS = {
     "knowledge": (
         ""
     ),
+    "steps": (
+        ""
+    ),
+    "quality": (
+        ""
+    ),
 }
 
 USER_INSTRUCTIONS = {
@@ -72,21 +78,54 @@ USER_INSTRUCTIONS = {
         "Answer:\n"
     ),
     "topic": (
-        "Please classify the math topics of the following text."
-        "Only output the topics as a single list separated by commas."
+        "Please classify the math topics of the following text.\n"
+        "Only output the topics as a single list separated by commas.\n"
         "The text should be classified into 1 to 10 topics."
-        "(e.g 'Linear algebra, Inequalities, Computer science, Projections')"
+        "(e.g 'Linear algebra, Inequalities, Computer science, Projections')\n"
     ),
     "difficulty": (
-        "Please classify the math difficulty level of the following text."
-        "Only output the math difficulty level."
-        "The math difficulty level should be classified as either n-th grade, n-th year undergrad, Master, PhD, AMC-n, AIME, USAJMO, USAMO, MOP, IMO or Putnam."
+        "Please classify the math difficulty level of the following text.\n"
+        "Only output the math difficulty level.\n"
+        "The math difficulty level should be classified as either n-th grade, n-th year undergrad, Master, PhD, AMC-n, AIME, USAJMO, USAMO, MOP, IMO or Putnam.\n"
     ),
     "knowledge": (
-        "We define a piece of knowledge as either a theorem, a fact, a relationship, a formula, a logical procedure or a definition."
-        "Please give the number of pieces of knowledge that are used in this solution."
-        "Don't count twice same pieces of knowledge, make sure every piece is unique and needed to solve the problem."
-        "Only output the number of pieces of knowledge."
+        "We define a piece of knowledge as either a theorem, a fact, a relationship, a formula, a logical procedure or a definition.\n"
+        "Please give the number of pieces of knowledge that are used in this solution.\n"
+        "Don't count twice same pieces of knowledge, make sure every piece is unique and needed to solve the problem.\n"
+        "Only output the number of pieces of knowledge.\n"
+    ),
+    "steps": (
+        "We define a reasoning step as either a logical induction, a logical deduction, the use of a theorem, an equation step or a computation step.\n"
+        "Please give the number of reasoning steps used in this solution.\n"
+        "Don't count twice identic reasoning steps.\n"
+        "Only output the number of reasoning steps.\n"
+    ),
+    "quality": (
+        # "You are the admin of a math forum.\n"
+        # "Your role is to give a decision about this solution based on its quality:\n"
+        # "Upvote: The solution is extremely well formulated, >98%% factually correct, with no inconsistencies, fluent and easily understood by the targeted audience.\n"
+        # "Keep: The solution is well formulated, >95%% factually correct, with few inconsistencies, mostly fluent and mostly understood by the targeted audience.\n"
+        # "Downvote: The solution is mostly well formulated, >70%% factually correct, with some inconsistencies, not always fluent and not always understood by the targeted audience.\n"
+        # "Remove: The solution is not well formulated, <70%% factually correct, with too much inconsistencies, not fluent or not well understood by the targeted audience.\n"
+        # "Only output the decision.\n"
+        """
+        You are the strict admin of a math forum. Your job is to determine whether the solution is fully correct.
+
+        A solution is **Correct** if:
+        - All reasoning steps are logically valid and mathematically accurate.
+        - The final answer is correct.
+        - No critical errors (e.g., wrong formula, algebra mistake, invalid assumption).
+
+        A solution is **Incorrect** if:
+        - There is any significant error in logic, calculation, or method.
+        - The final answer is wrong.
+        - Key steps are missing or unjustified.
+        - It contains hallucinations or nonsense.
+
+        Be strict.
+
+        Output Correct or Incorrect and then your justification of the label.
+        """
     ),
 }
 
