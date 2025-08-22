@@ -168,6 +168,18 @@ def filter_open_thoughts_2(dataset):
     return dataset
 
 
+def filter_open_thoughts_3(dataset):
+    n_samples = dataset.num_rows
+    # Non-math question
+    dataset = dataset.filter(lambda x: x["domain"] == "math")
+    # Question too short/long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][0]["value"], 5, 512))
+    # Solution too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][1]["value"], 0, 16384))
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    return dataset
+
+
 def filter_s1k_1_1(dataset):
     n_samples = dataset.num_rows
     # Question too short/long

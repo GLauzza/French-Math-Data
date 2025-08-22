@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python==3.12.10 
-  - numpy
+  - numpy<2.2
   - pandas
   - matplotlib
   - datasets
@@ -18,5 +18,7 @@ dependencies:
     - math-verify
     - trl
     - tensorboard
-    - liger-kernel
-    - deepspeed
+    - fasttext-numpy2
+    - tqdm
+    - scikit-learn
+    - umap

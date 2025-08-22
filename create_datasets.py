@@ -24,22 +24,22 @@ if __name__ == "__main__":
     parser.add_argument('--model', type=str, default="", help="Which model solution to use for training dataset")
     parser.add_argument('--rl', default=False, action="store_true")
     parser.add_argument('--fr_ratio', type=float, default=0.5, help="Percentage of french for train dataset")
-    parser.add_argument('--n', type=float, default=-1, help="Number of samples in the dataset")
+    parser.add_argument('--n', type=int, default=-1, help="Number of samples in the dataset")
     args = parser.parse_args()
 
     if "Fused-CoT" in args.datasets:    
-        # am_deepseek_distill = load_data("a-m-team/AM-DeepSeek-Distilled-40M", data_files="math_r1_*.jsonl").select(range(10000))
+        # am_deepseek_distill = load_data("a-m-team/AM-DeepSeek-Distilled-40M", data_files="math_r1_*.jsonl")
         # am_deepseek_distill = filter_am_deepseek_distill(am_deepseek_distill)
 
-        # big_math = load_data("SynthLabsAI/Big-Math-RL-Verified").select(range(10000))
+        # big_math = load_data("SynthLabsAI/Big-Math-RL-Verified")
         # big_math = filter_big_math(big_math)
 
-        deepmath = load_data("zwhe99/DeepMath-103K")
-        deepmath = deepmath.add_column(
-            "solution",
-            [x.split("</think>")[0] for x in deepmath["r1_solution_1"]]
-        )   
-        deepmath = filter_deepmath(deepmath)
+        # deepmath = load_data("zwhe99/DeepMath-103K")
+        # deepmath = deepmath.add_column(
+        #     "solution",
+        #     [x.split("</think>")[0] for x in deepmath["r1_solution_1"]]
+        # )   
+        # deepmath = filter_deepmath(deepmath)
 
         # limo = load_data("GAIR/LIMO")
         # limo = filter_limo(limo)
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         # limr = load_data("GAIR/LIMR")
         # limr = filter_limr(limr)
 
-        # llama_nemotron = load_data("nvidia/Llama-Nemotron-Post-Training-Dataset", data_files="SFT/math/math_v1.1.jsonl").select(range(10000))
+        # llama_nemotron = load_data("nvidia/Llama-Nemotron-Post-Training-Dataset", data_files="SFT/math/math_v1.1.jsonl")
         # llama_nemotron = llama_nemotron.add_column(
         #     "answer",
         #     [extract_boxed_text(x) for x in llama_nemotron["output"]]
@@ -61,22 +61,25 @@ if __name__ == "__main__":
         # )
         # math_lvl5_fr_train = filter_math_lvl5_fr_train(math_lvl5_fr_train)
 
-        # metamath_qa = load_data("meta-math/MetaMathQA").select(range(10000))
+        # metamath_qa = load_data("meta-math/MetaMathQA")
         # metamath_qa = metamath_qa.add_column(
         #     "answer",
         #     [x.split("The answer is: ")[-1] for x in metamath_qa["response"]],
         # )
         # metamath_qa = filter_metamath_qa(metamath_qa)
 
-        # numinamath_1_5 = load_data("AI-MO/NuminaMath-1.5").select(range(10000))
+        # numinamath_1_5 = load_data("AI-MO/NuminaMath-1.5")
         # numinamath_1_5 = filter_numinamath_1_5(numinamath_1_5)
 
-        # open_r1_math = load_data("open-r1/OpenR1-Math-220k").select(range(1000))
+        # open_r1_math = load_data("open-r1/OpenR1-Math-220k")
         # open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons'])
         # open_r1_math = filter_open_r1_math(open_r1_math)
 
-        # open_thoughts_2 = load_data("open-thoughts/OpenThoughts2-1M", data_files="data/*.parquet").select(range(10000))
+        # open_thoughts_2 = load_data("open-thoughts/OpenThoughts2-1M", data_files="data/*.parquet")
         # open_thoughts_2 = filter_open_thoughts_2(open_thoughts_2)
+        
+        open_thoughts_3 = load_data("open-thoughts/OpenThoughts3-1.2M", data_files="data/*.parquet").shuffle().select(range(20000))
+        open_thoughts_3 = filter_open_thoughts_3(open_thoughts_3)
 
         # #TODO: PENSEZ
 
@@ -102,15 +105,15 @@ if __name__ == "__main__":
             #     "source": ["big-math/" + source for source in big_math["source"]],
             #     "model": [None] * len(big_math),
             # },
-            {
-                "name": "deepmath",
-                "dataset": deepmath,
-                "question": deepmath["question"],
-                "answer": deepmath["final_answer"],
-                "solution": deepmath["solution"],
-                "source": ["deepmath"] * len(deepmath),
-                "model": ["deepseek-r1"] * len(deepmath),
-            },
+            # {
+            #     "name": "deepmath",
+            #     "dataset": deepmath,
+            #     "question": deepmath["question"],
+            #     "answer": deepmath["final_answer"],
+            #     "solution": deepmath["solution"],
+            #     "source": ["deepmath"] * len(deepmath),
+            #     "model": ["deepseek-r1"] * len(deepmath),
+            # },
             # {
             #     "name": "limo",
             #     "dataset": limo,
@@ -183,6 +186,15 @@ if __name__ == "__main__":
             #     "source": ["open-thoughts-2/" + source if source is not None else None for source in open_thoughts_2["source"]],
             #     "model": ["unknown"] * len(open_thoughts_2),
             # },
+            {
+                "name": "open-thoughts-3",
+                "dataset": open_thoughts_3,
+                "question": [x[0]["value"] for x in open_thoughts_3["conversations"]],
+                "answer": [None] * len(open_thoughts_3),
+                "solution": [x[1]["value"] for x in open_thoughts_3["conversations"]],
+                "source": ["open-thoughts-3/" + source if source is not None else None for source in open_thoughts_3["source"]],
+                "model": ["unknown"] * len(open_thoughts_3),
+            },
             # {
             #     "name": "s1k-1.1",
             #     "dataset": s1k_1_1,
@@ -263,10 +275,60 @@ if __name__ == "__main__":
             }
         ]
         eval_math_fr = fusion_datasets(eval_math_fr_datasets).shuffle(seed=0)
-        if nargs.n != -1:
+        if args.n != -1:
             eval_math_fr = eval_math_fr.select(range(args.n))
         eval_math_fr.save_to_disk(config.DATA_PATHS[1] + "Eval-Math-FR")
         eval_math_fr.save_to_disk(config.DATA_PATHS[2] + "Eval-Math-FR")
+
+    if "Eval-Math-EN" in args.datasets:
+            aime2024 = load_data("HuggingFaceH4/aime_2024")
+            aime2025 = load_data("yentinglin/aime_2025", data_files="data/*.parquet")
+            amc23 = load_data("knoveleng/AMC-23")
+            hmmt = load_data("MathArena/hmmt_feb_2025")
+            math500 = load_data("HuggingFaceH4/MATH-500", split="test")
+
+            eval_math_en_datasets = [
+                {
+                    "name": "aime2024",
+                    "dataset": aime2024,
+                    "question": aime2024["problem"],
+                    "answer": aime2024["answer"],
+                    "source": ["aime2024"] * len(aime2024),
+                },
+                {
+                    "name": "aime2025",
+                    "dataset": aime2025,
+                    "question": aime2025["problem"],
+                    "answer": aime2025["answer"],
+                    "source": ["aime2025"] * len(aime2025),
+                },
+                {
+                    "name": "amc23",
+                    "dataset": amc23,
+                    "question": amc23["problem"],
+                    "answer": amc23["answer"],
+                    "source": ["amc23"] * len(amc23),
+                },
+                {
+                    "name": "hmmt",
+                    "dataset": hmmt,
+                    "question": hmmt["problem"],
+                    "answer": hmmt["answer"],
+                    "source": ["hmmt"] * len(hmmt),
+                },
+                {
+                    "name": "math-500",
+                    "dataset": math500,
+                    "question": math500["problem"],
+                    "answer": math500["answer"],
+                    "source": ["math-500"] * len(math500),
+                },
+            ]
+            eval_math_en = fusion_datasets(eval_math_en_datasets).shuffle(seed=0)
+            if args.n != -1:
+                eval_math_en = eval_math_en.select(range(args.n))
+            eval_math_en.save_to_disk(config.DATA_PATHS[1] + "Eval-Math-EN")
+            eval_math_en.save_to_disk(config.DATA_PATHS[2] + "Eval-Math-EN")
 
     if "Train-Math" in args.datasets:
         model_ext = "_"*(len(args.model) > 0) + args.model

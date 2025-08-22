@@ -304,4 +304,4 @@ if __name__ == "__main__":
         dataset = load_data(args.dataset)
         model_path, _, _ = get_config(args.model)
         model, tokenizer = load_model(model_path)
-        plot_embedding(tokenizer, dataset)
+        tok_dist(tokenizer, dataset)
