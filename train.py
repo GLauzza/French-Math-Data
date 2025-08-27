@@ -2,6 +2,7 @@ import shutil
 import argparse
 
 from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
+from transformers import TrainingArguments, Trainer
 
 import config
 from utils_model import *
@@ -20,33 +21,65 @@ def prepare_data(chat_template_fun, dataset, tokenizer):
 
 def train(model, tokenizer, dataset, new_model_name):
     print("FM - Instantiate Training")
-    training_args = SFTConfig(
+    # training_args = SFTConfig(
+    #     dataset_text_field = "chat_input",
+    #     per_device_train_batch_size = 1,
+    #     gradient_accumulation_steps = 1,
+    #     gradient_checkpointing=True,    
+    #     warmup_steps = 13,
+    #     num_train_epochs = 0.0001,
+    #     learning_rate = 1e-5,
+    #     bf16 = True,
+    #     logging_first_step = True,
+    #     logging_steps = 20,
+    #     optim = "adamw_8bit",
+    #     weight_decay = 0.00,
+    #     lr_scheduler_type = "cosine",
+    #     output_dir = config.MODEL_PATHS[1] + new_model_name,
+    #     report_to = "tensorboard",
+    #     save_safetensors=False,
+    #     logging_dir=config.MODEL_PATHS[1] + new_model_name + "/logs",
+    #     seed=0,
+    #     use_liger_kernel=True,
+    #     max_length=16384,
+    #     # max_length=1,
+    #     # packing=True,
+    #     model_init_kwargs={"attn_implementation": "flash_attention_2"},
+    #     dataloader_pin_memory=True,
+    #     dataloader_num_workers=8,
+    #     # torch_compile=True,
+    #     # torch_compile_backend="inductor",
+    #     # deepspeed="deepspeed.json"
+    # )
+    training_args = TrainingArguments(
         dataset_text_field = "chat_input",
         per_device_train_batch_size = 1,
         gradient_accumulation_steps = 1,
         gradient_checkpointing=True,    
-        warmup_steps = 5,
+        warmup_steps = 13,
         num_train_epochs = 0.0001,
-        learning_rate = 2e-4,
+        learning_rate = 1e-5,
         bf16 = True,
         logging_first_step = True,
         logging_steps = 20,
-        optim = "adamw_bnb_8bit",
-        weight_decay = 0.01,
-        lr_scheduler_type = "linear",
+        optim = "adamw_8bit",
+        weight_decay = 0.00,
+        lr_scheduler_type = "cosine",
         output_dir = config.MODEL_PATHS[1] + new_model_name,
         report_to = "tensorboard",
         save_safetensors=False,
         logging_dir=config.MODEL_PATHS[1] + new_model_name + "/logs",
         seed=0,
         use_liger_kernel=True,
-        max_length=128,
-        # padding_free=True,
+        max_length=16384,
+        # max_length=1,
+        # packing=True,
         model_init_kwargs={"attn_implementation": "flash_attention_2"},
         dataloader_pin_memory=True,
         dataloader_num_workers=8,
-        torch_compile=True,
-        torch_compile_backend="inductor"
+        # torch_compile=True,
+        # torch_compile_backend="inductor",
+        # deepspeed="deepspeed.json"
     )
 
     collator = DataCollatorForCompletionOnlyLM(
@@ -54,7 +87,15 @@ def train(model, tokenizer, dataset, new_model_name):
         tokenizer=tokenizer
     )
 
-    trainer = SFTTrainer(
+    # trainer = SFTTrainer(
+    #     model=model,
+    #     train_dataset=dataset,
+    #     processing_class=tokenizer,
+    #     data_collator=collator,
+    #     args=training_args,
+    # )
+
+    trainer = Trainer(
         model=model,
         train_dataset=dataset,
         processing_class=tokenizer,

@@ -1,0 +1,9 @@
+# accelerate_config.yaml
+compute_environment: LOCAL_MACHINE
+distributed_type: MULTI_GPU
+mixed_precision: bf16          # or 'bf16' if supported
+num_processes: 4               # number of GPUs you're using
+num_machines: 1
+machine_rank: 0
+deepspeed_config: {}
+fsdp_config: {}
