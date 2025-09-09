@@ -6,6 +6,7 @@ from math_verify import parse, verify
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import config
 from process_data.extract_answer import *
+from utils_model import *
 
 
 def get_n_tokens(x):
@@ -168,14 +169,43 @@ def filter_open_thoughts_2(dataset):
     return dataset
 
 
-def filter_open_thoughts_3(dataset):
+def filter_open_thoughts_3(dataset, tokenizer):
     n_samples = dataset.num_rows
     # Non-math question
-    dataset = dataset.filter(lambda x: x["domain"] == "math")
+    # dataset = dataset.filter(lambda x: x["domain"] == "math")
     # Question too short/long
-    dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][0]["value"], 5, 512))
-    # Solution too long
-    dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][1]["value"], 0, 16384))
+    # dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][0]["value"], 5, 512))
+    # # Solution too long
+    # dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][1]["value"], 0, 16384))
+    # # Whole sample too long
+    # dataset = dataset.filter(lambda x: filter_n_tokens(
+    #     temp_chat_template_fun(tokenizer, x["conversations"][0]["value"]) + x["conversations"][1]["value"],
+    #     0,
+    #     16300
+    # ))
+    # tokens = []
+    # tokens2 = []
+    # tokens3 = []
+    # for x in dataset:
+    #     n = get_n_tokens(
+    #         temp_chat_template_fun(tokenizer, x["conversations"][0]["value"]) + x["conversations"][1]["value"],
+    #     )
+    #     m = get_n_tokens(
+    #         x["conversations"][0]["value"],
+    #     )
+    #     k = get_n_tokens(
+    #         x["conversations"][1]["value"],
+    #     )
+    #     tokens.append(n)
+    #     tokens2.append(m)
+    #     tokens3.append(k)
+    #     print("tok",n)
+    #     print("tok2",m)
+    #     print("tok3",k)
+    # print("max tok", max(tokens))  
+    # print("max tok2", max(tokens2))  
+    # print("max tok3", max(tokens3))   
+    # raise Exception 
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 

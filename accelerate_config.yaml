@@ -1,9 +1,19 @@
-# accelerate_config.yaml
-compute_environment: LOCAL_MACHINE
-distributed_type: MULTI_GPU
-mixed_precision: bf16          # or 'bf16' if supported
-num_processes: 4               # number of GPUs you're using
-num_machines: 1
+compute_environment: LOCAL_MACHINE                                                                                                                                                      
+debug: false                                                                                                                                                                            
+deepspeed_config:                                                                                                                                                                       
+  deepspeed_config_file: ~/git/French-Math-Data/deepspeed.json                                                                                                                          
+distributed_type: DEEPSPEED
+downcast_bf16: 'no'
+dynamo_config:
+  dynamo_backend: INDUCTOR
+enable_cpu_affinity: false
 machine_rank: 0
-deepspeed_config: {}
-fsdp_config: {}
+main_training_function: main
+num_machines: 1
+num_processes: 4
+rdzv_backend: static
+same_network: true
+tpu_env: []
+tpu_use_cluster: false
+tpu_use_sudo: false
+use_cpu: false

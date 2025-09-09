@@ -79,7 +79,7 @@ def train(model, tokenizer, dataset, new_model_name):
         dataloader_num_workers=8,
         # torch_compile=True,
         # torch_compile_backend="inductor",
-        # deepspeed="deepspeed.json"
+        deepspeed="deepspeed.json"
     )
 
     collator = DataCollatorForCompletionOnlyLM(

@@ -52,6 +52,7 @@ def infer_chunked(model, raw_dataset, chunked_dataset, dataloader, output_name, 
     inputs = [""] * n_sample
     outputs = [[]] * n_sample
     for i in tqdm(range(max_chunks)):
+        print(f"FM - Infering chunk {i}/{max_chunks}")
         for data in tqdm(dataloader):
             print(f"\n\n\nLens:{[len(sample) for sample in data['chat_input']]}\n\nInputs:\n{data['chat_input']}\n\n")
             request_outputs = model.generate(data["chat_input"], sampling_params)
@@ -163,7 +164,7 @@ if __name__ == "__main__":
 
     model = load_model(model_path, is_vllm=True)    
 
-    raw_dataset = load_data(args.dataset).shuffle(seed=0).select(range(500))
+    raw_dataset = load_data(args.dataset).shuffle(seed=0)
     dataset, dataloader, _ = prepare_inference_data(
         raw_dataset,
         chat_template_fun,

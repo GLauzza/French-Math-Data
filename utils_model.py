@@ -260,6 +260,20 @@ def to_chat_template_deepseek(task):
         f"{USER_INSTRUCTIONS[task]}{x}\n{SYSTEM_INSTRUCTIONS[task]}\n{start_thinking}{language_forcing}"
     ))
 
+def temp_chat_template_fun(tokenizer, problem):
+    # messages = [
+    #     {
+    #         "role": "user", 
+    #         "content": f"Problem: {problem}\nMark your solution with \\boxed\nAnswer:"
+    #     },
+    # ]
+    messages = [
+        {
+            "role": "user", 
+            "content": problem,
+        },
+    ]
+    return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
 def get_config(name, task="math", n=1, max_length=1000000):
     print("FM - Getting Config:", name, task)

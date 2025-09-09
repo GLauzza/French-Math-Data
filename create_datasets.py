@@ -41,8 +41,8 @@ if __name__ == "__main__":
         # )   
         # deepmath = filter_deepmath(deepmath)
 
-        # limo = load_data("GAIR/LIMO")
-        # limo = filter_limo(limo)
+        # limov2 = load_data("GAIR/LIMO-v2")
+        # limov2 = filter_limo(limov2)
 
         # limr = load_data("GAIR/LIMR")
         # limr = filter_limr(limr)
@@ -78,8 +78,12 @@ if __name__ == "__main__":
         # open_thoughts_2 = load_data("open-thoughts/OpenThoughts2-1M", data_files="data/*.parquet")
         # open_thoughts_2 = filter_open_thoughts_2(open_thoughts_2)
         
-        open_thoughts_3 = load_data("open-thoughts/OpenThoughts3-1.2M", data_files="data/*.parquet").shuffle().select(range(20000))
-        open_thoughts_3 = filter_open_thoughts_3(open_thoughts_3)
+        # model_path, chat_template_fun, _ = get_config("Qwen2.5-7B-Instruct", task="math")
+        # model, tokenizer = load_model(model_path)
+        # open_thoughts_3 = load_data("open-thoughts/OpenThoughts3-1.2M", data_files="data/*.parquet").shuffle().select(range(2000))
+        # open_thoughts_3 = filter_open_thoughts_3(open_thoughts_3, tokenizer)
+
+        open_thoughts_3 = load_data("mlfoundations-dev/openthoughts3_1k")
 
         # #TODO: PENSEZ
 
@@ -115,13 +119,13 @@ if __name__ == "__main__":
             #     "model": ["deepseek-r1"] * len(deepmath),
             # },
             # {
-            #     "name": "limo",
-            #     "dataset": limo,
-            #     "question": limo["question"],
-            #     "answer": limo["answer"],
-            #     "solution": limo["solution"],
-            #     "source": ["limo/NuminaMath-CoT or AIME or MATH or other"] * len(limo),
-            #     "model": ["DeepSeek R1 or DeepSeek-R1-Distill-Qwen-32B or Qwen2.5-32b-Instruct or other"] * len(limo)
+            #     "name": "limov2",
+            #     "dataset": limov2,
+            #     "question": limov2["question"],
+            #     "answer": limov2["answer"],
+            #     "solution": limov2["solution"],
+            #     "source": ["limov2/NuminaMath-CoT or AIME or MATH or other"] * len(limov2),
+            #     "model": ["DeepSeek R1 or DeepSeek-R1-Distill-Qwen-32B or Qwen2.5-32b-Instruct or other"] * len(limov2)
             # },
             # {
             #     "name": "limr",
@@ -200,7 +204,7 @@ if __name__ == "__main__":
             #     "dataset": s1k_1_1,
             #     "question": s1k_1_1["question"],
             #     "answer": s1k_1_1["solution"],
-            #     "solution": s1k_1_1["deepseek_thinking_trajectory"],
+            #     "solution": ["\n<|im_start|>think\n" + thinking + "\n<|im_start|>answer\n" + attempt for thinking, attempt in zip(s1k_1_1["deepseek_thinking_trajectory"], s1k_1_1["deepseek_attempt"])],
             #     "source": ["s1k-1.1/" + source for source in s1k_1_1["source_type"]],
             #     "model": ["deepseek-r1"] * len(s1k_1_1),
             # },

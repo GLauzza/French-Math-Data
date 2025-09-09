@@ -18,15 +18,18 @@ def hf_to_nemo(dataset, output_path, chat_template_fun, tokenizer):
     os.makedirs(output_path, exist_ok=True) 
     splitted_dataset = dataset.train_test_split(test_size=0.05, seed=0)
     with open(output_path + "/training.jsonl", "w", encoding="utf-8") as f:
-        for sample in tqdm(splitted_dataset["train"]):
+        # for sample in tqdm(splitted_dataset["train"]):
+        for sample in tqdm(dataset):
             f.write(json.dumps({
-                "input": chat_template_fun(sample["question"]),
+                # "input": chat_template_fun(sample["question"]),
+                "input": temp_chat_template_fun(tokenizer, sample["question"]),
                 "output": sample["solution"],
             }) + "\n")
     with open(output_path + "/validation.jsonl", "w", encoding="utf-8") as f:
         for sample in tqdm(splitted_dataset["test"]):
             f.write(json.dumps({
-                "input": chat_template_fun(sample["question"]),
+                # "input": chat_template_fun(sample["question"]),
+                "input": temp_chat_template_fun(tokenizer, sample["question"]),
                 "output": sample["solution"],
             }) + "\n")
     with open(output_path + "/test.jsonl", "w", encoding="utf-8") as f:
