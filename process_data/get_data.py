@@ -26,14 +26,18 @@ def get_am_deepseek_distill():
     get_huggingface_data("a-m-team/AM-DeepSeek-Distilled-40M", ["math_r1_*.jsonl"]) # ~40GB
 
 
+def get_am_deepseek_r1_0528_distill():
+    get_huggingface_data("a-m-team/AM-DeepSeek-R1-0528-Distilled", ["math.jsonl"]) # ~31GB
+
+
 def get_big_math():
     get_huggingface_data("SynthLabsAI/Big-Math-RL-Verified", ["*.parquet"]) # ~30MB
 
 def get_deepmath():
     get_huggingface_data("zwhe99/DeepMath-103K", ["*.parquet"]) # ~2GB
 
-def get_limo():
-    get_huggingface_data("GAIR/LIMO", ["*.jsonl"]) # ~20MB
+def get_limo_v2():
+    get_huggingface_data("GAIR/LIMO-v2", ["*.jsonl"]) # ~30MB
 
 
 def get_limr():
@@ -67,8 +71,20 @@ def get_msvamp():
     get_huggingface_data("Mathoctopus/MSVAMP", ["test_French.json"]) # ~400KB
 
 
+def get_nemotron_v1():
+    get_huggingface_data("nvidia/Nemotron-Post-Training-Dataset-v1", ["data/math-*.parquet"]) # ~40GB
+
+
+def get_nemotron_v2():
+    get_huggingface_data("nvidia/Nemotron-Post-Training-Dataset-v2", ["data/math-*.parquet"]) # ~200MB
+
+
 def get_numinamath_1_5():
     get_huggingface_data("AI-MO/NuminaMath-1.5", ["data/*.parquet"]) # ~600MB
+
+
+def get_open_math_reasoning():
+    get_huggingface_data("nvidia/OpenMathReasoning", ["data/cot-*.parquet"]) # ~30GB
 
 
 def get_open_r1_math():
@@ -93,19 +109,23 @@ def get_s1k_1_1():
 
 if __name__ == "__main__":
     # get_am_deepseek_distill() # Already on JZ
-    get_big_math()
-    get_deepmath()
-    get_limo()
-    get_limr()
+    get_am_deepseek_r1_0528_distill()
+    # get_big_math()
+    # get_deepmath()
+    # get_limo_v2()
+    # get_limr()
     # get_llama_nemotron() # Already on JZ
-    get_math_lvl5_fr()
-    get_mclm() 
-    get_metamath_qa()
-    get_mgsm() 
-    get_msvamp()
-    get_numinamath_1_5()
+    # get_math_lvl5_fr()
+    # get_mclm() 
+    # get_metamath_qa()
+    # get_mgsm() 
+    # get_msvamp()
+    get_nemotron_v1()
+    get_nemotron_v2()
+    # get_numinamath_1_5()
+    get_open_math_reasoning()
     # get_open_r1_math() # Already on JZ
     # get_open_thoughts_2() # Already on JZ
-    get_pensez()
-    get_poly_math()
-    get_s1k_1_1()
+    # get_pensez()
+    # get_poly_math()
+    # get_s1k_1_1()

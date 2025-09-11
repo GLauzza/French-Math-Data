@@ -30,19 +30,22 @@ if __name__ == "__main__":
     if "Fused-CoT" in args.datasets:    
         # am_deepseek_distill = load_data("a-m-team/AM-DeepSeek-Distilled-40M", data_files="math_r1_*.jsonl")
         # am_deepseek_distill = filter_am_deepseek_distill(am_deepseek_distill)
+        # am_deepseek_r1_0528_distill = load_data("a-m-team/AM-DeepSeek-R1-0528-Distilled").shuffle().select(range(20000))
+        # am_deepseek_r1_0528_distill = filter_am_deepseek_r1_0528_distill(am_deepseek_r1_0528_distill)
 
         # big_math = load_data("SynthLabsAI/Big-Math-RL-Verified")
         # big_math = filter_big_math(big_math)
 
-        # deepmath = load_data("zwhe99/DeepMath-103K")
-        # deepmath = deepmath.add_column(
+        # deepmath = load_data("zwhe99/DeepMath-103K").shuffle().select(range(20000))
+        # deepmath_solutions = deepmath["r1_solution_1"] + deepmath["r1_solution_2"] + deepmath["r1_solution_3"]
+        # deepmath = concatenate_datasets([deepmath] * 3).add_column(
         #     "solution",
-        #     [x.split("</think>")[0] for x in deepmath["r1_solution_1"]]
-        # )   
+        #     deepmath_solutions
+        # ).shuffle().select(range(20000))
         # deepmath = filter_deepmath(deepmath)
 
-        # limov2 = load_data("GAIR/LIMO-v2")
-        # limov2 = filter_limo(limov2)
+        # limo_v2 = load_data("GAIR/LIMO-v2")
+        # limo_v2 = filter_limo_v2(limo_v2)
 
         # limr = load_data("GAIR/LIMR")
         # limr = filter_limr(limr)
@@ -68,27 +71,36 @@ if __name__ == "__main__":
         # )
         # metamath_qa = filter_metamath_qa(metamath_qa)
 
+        nemotron_v1 = load_data("nvidia/Nemotron-Post-Training-Dataset-v1", split="math").shuffle().select(range(20000))
+        nemotron_v1 = filter_nemotron_v1(nemotron_v1)
+
+        # nemotron_v2 = load_data("nvidia/Nemotron-Post-Training-Dataset-v2")
+        # nemotron_v2 = filter_nemotron_v2(nemotron_v2)
+
         # numinamath_1_5 = load_data("AI-MO/NuminaMath-1.5")
         # numinamath_1_5 = filter_numinamath_1_5(numinamath_1_5)
 
-        # open_r1_math = load_data("open-r1/OpenR1-Math-220k")
-        # open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons'])
-        # open_r1_math = filter_open_r1_math(open_r1_math)
+        open_math_reasoning = load_data("nvidia/OpenMathReasoning").shuffle().select(range(20000))
+        open_math_reasoning = filter_open_math_reasoning(open_math_reasoning)
+
+        open_r1_math = load_data("open-r1/OpenR1-Math-220k").shuffle().select(range(20000))
+        open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons']).shuffle().select(range(20000))
+        open_r1_math = filter_open_r1_math(open_r1_math)
 
         # open_thoughts_2 = load_data("open-thoughts/OpenThoughts2-1M", data_files="data/*.parquet")
         # open_thoughts_2 = filter_open_thoughts_2(open_thoughts_2)
         
-        # model_path, chat_template_fun, _ = get_config("Qwen2.5-7B-Instruct", task="math")
-        # model, tokenizer = load_model(model_path)
-        # open_thoughts_3 = load_data("open-thoughts/OpenThoughts3-1.2M", data_files="data/*.parquet").shuffle().select(range(2000))
-        # open_thoughts_3 = filter_open_thoughts_3(open_thoughts_3, tokenizer)
-
-        open_thoughts_3 = load_data("mlfoundations-dev/openthoughts3_1k")
+        open_thoughts_3 = load_data("open-thoughts/OpenThoughts3-1.2M").shuffle().select(range(20000))
+        open_thoughts_3 = open_thoughts_3.add_column(
+            "answer",
+            [extract_boxed_text(x) for x in open_thoughts_3["conversations"][1]["value"]]
+        )
+        open_thoughts_3 = filter_open_thoughts_3(open_thoughts_3)
 
         # #TODO: PENSEZ
 
-        # s1k_1_1 = load_data("simplescaling/s1K-1.1")
-        # s1k_1_1 = filter_s1k_1_1(s1k_1_1)
+        s1k_1_1 = load_data("simplescaling/s1K-1.1")
+        s1k_1_1 = filter_s1k_1_1(s1k_1_1)
 
         cot_datasets = [
             # {
@@ -97,9 +109,18 @@ if __name__ == "__main__":
             #     "question": am_deepseek_distill["question"],
             #     "answer": am_deepseek_distill["ground_truth"],
             #     "solution": am_deepseek_distill["answer"],
-            #     "source": ["am-deepseek-distill" + source for source in am_deepseek_distill["question_source"]],
+            #     "source": ["am-deepseek-distill/" + source for source in am_deepseek_distill["question_source"]],
             #     "model": am_deepseek_distill["model_name"],
             # },
+            {
+                "name": "am-deepseek-r1-0528-distill",
+                "dataset": am_deepseek_r1_0528_distill,
+                "question": am_deepseek_r1_0528_distill["conversations"][0]["value"],
+                "answer": am_deepseek_r1_0528_distill["conversations"][1]["info"]["ground_truth"],
+                "solution": am_deepseek_r1_0528_distill["conversations"][1]["value"],
+                "source": ["am-deepseek-r1-0528-distill/" + source for source in am_deepseek_r1_0528_distill["conversations"][0]["info"]["source"]],
+                "model": am_deepseek_r1_0528_distill["conversations"][1]["info"]["model_name"],
+            },
             # {
             #     "name": "big-math",
             #     "dataset": big_math,
@@ -109,24 +130,24 @@ if __name__ == "__main__":
             #     "source": ["big-math/" + source for source in big_math["source"]],
             #     "model": [None] * len(big_math),
             # },
-            # {
-            #     "name": "deepmath",
-            #     "dataset": deepmath,
-            #     "question": deepmath["question"],
-            #     "answer": deepmath["final_answer"],
-            #     "solution": deepmath["solution"],
-            #     "source": ["deepmath"] * len(deepmath),
-            #     "model": ["deepseek-r1"] * len(deepmath),
-            # },
-            # {
-            #     "name": "limov2",
-            #     "dataset": limov2,
-            #     "question": limov2["question"],
-            #     "answer": limov2["answer"],
-            #     "solution": limov2["solution"],
-            #     "source": ["limov2/NuminaMath-CoT or AIME or MATH or other"] * len(limov2),
-            #     "model": ["DeepSeek R1 or DeepSeek-R1-Distill-Qwen-32B or Qwen2.5-32b-Instruct or other"] * len(limov2)
-            # },
+            {
+                "name": "deepmath",
+                "dataset": deepmath,
+                "question": deepmath["question"],
+                "answer": deepmath["final_answer"],
+                "solution": deepmath["solution"],
+                "source": ["deepmath/(MMIQC or WebInstructSub or NuminaMath-CoT)"] * len(deepmath),
+                "model": ["deepseek-r1"] * len(deepmath),
+            },
+            {
+                "name": "limo_v2",
+                "dataset": limo_v2,
+                "question": limo_v2["question"],
+                "answer": limo_v2["answer"],
+                "solution": limo_v2["solution"],
+                "source": ["limo_v2/(NuminaMath-CoT or DeepScaleR or AIME or MATH)"] * len(limo_v2),
+                "model": ["DeepSeek R1 or DeepSeek-R1-Distill-Qwen-32B or QwQ-32b"] * len(limo_v2)
+            },
             # {
             #     "name": "limr",
             #     "dataset": limr,
@@ -163,6 +184,15 @@ if __name__ == "__main__":
             #     "source": ["metamath-qa/" + subset for subset in metamath_qa["type"]],
             #     "model": ["unknown"] * len(metamath_qa),
             # },
+            {
+                "name": "nemotron-v1",
+                "dataset": nemotron_v1,
+                "question": nemotron_v1["messages"][0]["content"],
+                "answer": nemotron_v1["metadata"]["expected_answer"],
+                "solution": nemotron_v1["messages"][1]["content"],
+                "source": ["nemotron-v1/" + source for source in nemotron_v1["metadata"]["problem_source"]],
+                "model": nemotron_v1["generator"],
+            },
             # {
             #     "name": "numinamath-1.5",
             #     "dataset": numinamath_1_5,
@@ -172,15 +202,24 @@ if __name__ == "__main__":
             #     "source": ["numina-math-1.5/" + source for source in numinamath_1_5["source"]],
             #     "model": ["unknown"] * len(numinamath_1_5),
             # },
-            # {
-            #     "name": "open-r1-math",
-            #     "dataset": open_r1_math,
-            #     "question": open_r1_math["problem"],
-            #     "answer": open_r1_math["answer"],
-            #     "solution": open_r1_math["generations"],
-            #     "source": ["open-r1-math/" + source for source in open_r1_math["source"]],
-            #     "model": ["open-r1"] * len(open_r1_math),
-            # },
+            {
+                "name": "open-math-reasoning",
+                "dataset": open_math_reasoning,
+                "question": open_math_reasoning["problem"],
+                "answer": open_math_reasoning["expected_answer"],
+                "solution": open_math_reasoning["generated_solution"],
+                "source": ["open-math-reasoning/" + source for source in open_math_reasoning["problem_source"]],
+                "model": open_math_reasoning["generation_model"],
+            },
+            {
+                "name": "open-r1-math",
+                "dataset": open_r1_math,
+                "question": open_r1_math["problem"],
+                "answer": open_r1_math["answer"],
+                "solution": open_r1_math["generations"],
+                "source": ["open-r1-math/" + source for source in open_r1_math["source"]],
+                "model": ["deepseek-r1"] * len(open_r1_math),
+            },
             # {
             #     "name": "open-thoughts-2",
             #     "dataset": open_thoughts_2,
@@ -199,17 +238,17 @@ if __name__ == "__main__":
                 "source": ["open-thoughts-3/" + source if source is not None else None for source in open_thoughts_3["source"]],
                 "model": ["unknown"] * len(open_thoughts_3),
             },
-            # {
-            #     "name": "s1k-1.1",
-            #     "dataset": s1k_1_1,
-            #     "question": s1k_1_1["question"],
-            #     "answer": s1k_1_1["solution"],
-            #     "solution": ["\n<|im_start|>think\n" + thinking + "\n<|im_start|>answer\n" + attempt for thinking, attempt in zip(s1k_1_1["deepseek_thinking_trajectory"], s1k_1_1["deepseek_attempt"])],
-            #     "source": ["s1k-1.1/" + source for source in s1k_1_1["source_type"]],
-            #     "model": ["deepseek-r1"] * len(s1k_1_1),
-            # },
+            {
+                "name": "s1k-1.1",
+                "dataset": s1k_1_1,
+                "question": s1k_1_1["question"],
+                "answer": s1k_1_1["solution"],
+                "solution": ["<think>" + thinking + "\n</think>\n<answer>\n" + attempt + "</answer>" for thinking, attempt in zip(s1k_1_1["deepseek_thinking_trajectory"], s1k_1_1["deepseek_attempt"])],
+                "source": ["s1k-1.1/" + source for source in s1k_1_1["source_type"]],
+                "model": ["deepseek-r1"] * len(s1k_1_1),
+            },
         ]
-        fused_cot = fusion_datasets(cot_datasets)
+        fused_cot = fusion_datasets(cot_datasets, max_per_dataset=1000)
         fused_cot = fused_cot.filter(lambda x: x["solution"] is not None).shuffle(seed=0)
         if args.n != -1:
             fused_cot = fused_cot.select(range(args.n))

@@ -45,7 +45,7 @@ def flatten_features(dataset, column_names):
     return flat_dataset
 
 
-def fusion_datasets(datasets):
+def fusion_datasets(datasets, max_per_dataset=-1):
     features = set(datasets[0].keys()) - set(["name", "dataset"])
     fused_dataset = {}
     for feature in features:
@@ -53,6 +53,8 @@ def fusion_datasets(datasets):
 
     for dataset in datasets:
         print(f"Processing dataset: {dataset['name']}")
+        if max_per_dataset != -1:
+            dataset = dataset.shuffle().select(range(max_per_dataset))        
         for feature in features:
             fused_dataset[feature].extend(dataset[feature])
 
