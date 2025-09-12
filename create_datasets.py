@@ -71,8 +71,8 @@ if __name__ == "__main__":
         # )
         # metamath_qa = filter_metamath_qa(metamath_qa)
 
-        nemotron_v1 = load_data("nvidia/Nemotron-Post-Training-Dataset-v1", split="math").shuffle().select(range(20000))
-        nemotron_v1 = filter_nemotron_v1(nemotron_v1)
+        # nemotron_v1 = load_data("nvidia/Nemotron-Post-Training-Dataset-v1", split="math").shuffle().select(range(20000))
+        # nemotron_v1 = filter_nemotron_v1(nemotron_v1)
 
         # nemotron_v2 = load_data("nvidia/Nemotron-Post-Training-Dataset-v2")
         # nemotron_v2 = filter_nemotron_v2(nemotron_v2)
@@ -80,8 +80,8 @@ if __name__ == "__main__":
         # numinamath_1_5 = load_data("AI-MO/NuminaMath-1.5")
         # numinamath_1_5 = filter_numinamath_1_5(numinamath_1_5)
 
-        open_math_reasoning = load_data("nvidia/OpenMathReasoning").shuffle().select(range(20000))
-        open_math_reasoning = filter_open_math_reasoning(open_math_reasoning)
+        # open_math_reasoning = load_data("nvidia/OpenMathReasoning", split="cot").shuffle().select(range(20000))
+        # open_math_reasoning = filter_open_math_reasoning(open_math_reasoning)
 
         open_r1_math = load_data("open-r1/OpenR1-Math-220k").shuffle().select(range(20000))
         open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons']).shuffle().select(range(20000))
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         open_thoughts_3 = load_data("open-thoughts/OpenThoughts3-1.2M").shuffle().select(range(20000))
         open_thoughts_3 = open_thoughts_3.add_column(
             "answer",
-            [extract_boxed_text(x) for x in open_thoughts_3["conversations"][1]["value"]]
+            [extract_boxed_text(x["conversations"][1]["value"]) for x in open_thoughts_3]
         )
         open_thoughts_3 = filter_open_thoughts_3(open_thoughts_3)
 
