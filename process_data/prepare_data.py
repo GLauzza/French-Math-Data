@@ -52,11 +52,9 @@ def fusion_datasets(datasets, max_per_dataset=-1):
         fused_dataset[feature] = []
 
     for dataset in datasets:
-        print(f"Processing dataset: {dataset['name']}")
-        if max_per_dataset != -1:
-            dataset = dataset.shuffle().select(range(max_per_dataset))        
+        print(f"Processing dataset: {dataset['name']}")     
         for feature in features:
-            fused_dataset[feature].extend(dataset[feature])
+            fused_dataset[feature].extend(dataset[feature][:max_per_dataset])
 
     return Dataset.from_dict(fused_dataset)
 

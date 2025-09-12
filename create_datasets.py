@@ -30,22 +30,23 @@ if __name__ == "__main__":
     if "Fused-CoT" in args.datasets:    
         # am_deepseek_distill = load_data("a-m-team/AM-DeepSeek-Distilled-40M", data_files="math_r1_*.jsonl")
         # am_deepseek_distill = filter_am_deepseek_distill(am_deepseek_distill)
-        # am_deepseek_r1_0528_distill = load_data("a-m-team/AM-DeepSeek-R1-0528-Distilled").shuffle().select(range(20000))
-        # am_deepseek_r1_0528_distill = filter_am_deepseek_r1_0528_distill(am_deepseek_r1_0528_distill)
+
+        am_deepseek_r1_0528_distill = load_data("a-m-team/AM-DeepSeek-R1-0528-Distilled").shuffle().select(range(50000))
+        am_deepseek_r1_0528_distill = filter_am_deepseek_r1_0528_distill(am_deepseek_r1_0528_distill)
 
         # big_math = load_data("SynthLabsAI/Big-Math-RL-Verified")
         # big_math = filter_big_math(big_math)
 
-        # deepmath = load_data("zwhe99/DeepMath-103K").shuffle().select(range(20000))
-        # deepmath_solutions = deepmath["r1_solution_1"] + deepmath["r1_solution_2"] + deepmath["r1_solution_3"]
-        # deepmath = concatenate_datasets([deepmath] * 3).add_column(
-        #     "solution",
-        #     deepmath_solutions
-        # ).shuffle().select(range(20000))
-        # deepmath = filter_deepmath(deepmath)
+        deepmath = load_data("zwhe99/DeepMath-103K").shuffle().select(range(50000))
+        deepmath_solutions = list(deepmath["r1_solution_1"]) + list(deepmath["r1_solution_2"]) + list(deepmath["r1_solution_3"])
+        deepmath = concatenate_datasets([deepmath] * 3).add_column(
+            "solution",
+            deepmath_solutions
+        ).shuffle().select(range(50000))
+        deepmath = filter_deepmath(deepmath)
 
-        # limo_v2 = load_data("GAIR/LIMO-v2")
-        # limo_v2 = filter_limo_v2(limo_v2)
+        limo_v2 = load_data("GAIR/LIMO-v2")
+        limo_v2 = filter_limo_v2(limo_v2)
 
         # limr = load_data("GAIR/LIMR")
         # limr = filter_limr(limr)
@@ -71,8 +72,8 @@ if __name__ == "__main__":
         # )
         # metamath_qa = filter_metamath_qa(metamath_qa)
 
-        # nemotron_v1 = load_data("nvidia/Nemotron-Post-Training-Dataset-v1", split="math").shuffle().select(range(20000))
-        # nemotron_v1 = filter_nemotron_v1(nemotron_v1)
+        nemotron_v1 = load_data("nvidia/Nemotron-Post-Training-Dataset-v1", split="math").shuffle().select(range(50000))
+        nemotron_v1 = filter_nemotron_v1(nemotron_v1)
 
         # nemotron_v2 = load_data("nvidia/Nemotron-Post-Training-Dataset-v2")
         # nemotron_v2 = filter_nemotron_v2(nemotron_v2)
@@ -80,17 +81,17 @@ if __name__ == "__main__":
         # numinamath_1_5 = load_data("AI-MO/NuminaMath-1.5")
         # numinamath_1_5 = filter_numinamath_1_5(numinamath_1_5)
 
-        # open_math_reasoning = load_data("nvidia/OpenMathReasoning", split="cot").shuffle().select(range(20000))
-        # open_math_reasoning = filter_open_math_reasoning(open_math_reasoning)
+        open_math_reasoning = load_data("nvidia/OpenMathReasoning", split="cot").shuffle().select(range(50000))
+        open_math_reasoning = filter_open_math_reasoning(open_math_reasoning)
 
-        open_r1_math = load_data("open-r1/OpenR1-Math-220k").shuffle().select(range(20000))
-        open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons']).shuffle().select(range(20000))
+        open_r1_math = load_data("open-r1/OpenR1-Math-220k").shuffle().select(range(50000))
+        open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons']).shuffle().select(range(50))
         open_r1_math = filter_open_r1_math(open_r1_math)
 
         # open_thoughts_2 = load_data("open-thoughts/OpenThoughts2-1M", data_files="data/*.parquet")
         # open_thoughts_2 = filter_open_thoughts_2(open_thoughts_2)
         
-        open_thoughts_3 = load_data("open-thoughts/OpenThoughts3-1.2M").shuffle().select(range(20000))
+        open_thoughts_3 = load_data("open-thoughts/OpenThoughts3-1.2M").shuffle().select(range(50000))
         open_thoughts_3 = open_thoughts_3.add_column(
             "answer",
             [extract_boxed_text(x["conversations"][1]["value"]) for x in open_thoughts_3]
@@ -115,11 +116,11 @@ if __name__ == "__main__":
             {
                 "name": "am-deepseek-r1-0528-distill",
                 "dataset": am_deepseek_r1_0528_distill,
-                "question": am_deepseek_r1_0528_distill["conversations"][0]["value"],
-                "answer": am_deepseek_r1_0528_distill["conversations"][1]["info"]["ground_truth"],
-                "solution": am_deepseek_r1_0528_distill["conversations"][1]["value"],
-                "source": ["am-deepseek-r1-0528-distill/" + source for source in am_deepseek_r1_0528_distill["conversations"][0]["info"]["source"]],
-                "model": am_deepseek_r1_0528_distill["conversations"][1]["info"]["model_name"],
+                "question": [x["conversations"][0]["value"] for x in am_deepseek_r1_0528_distill],
+                "answer": [x["conversations"][1]["info"]["ground_truth"] for x in am_deepseek_r1_0528_distill],
+                "solution": [x["conversations"][1]["value"] for x in am_deepseek_r1_0528_distill],
+                "source": ["am-deepseek-r1-0528-distill/" + x["conversations"][0]["info"]["source"] for x in am_deepseek_r1_0528_distill],
+                "model": [x["conversations"][1]["info"]["model_name"] for x in am_deepseek_r1_0528_distill],
             },
             # {
             #     "name": "big-math",
@@ -187,10 +188,10 @@ if __name__ == "__main__":
             {
                 "name": "nemotron-v1",
                 "dataset": nemotron_v1,
-                "question": nemotron_v1["messages"][0]["content"],
-                "answer": nemotron_v1["metadata"]["expected_answer"],
-                "solution": nemotron_v1["messages"][1]["content"],
-                "source": ["nemotron-v1/" + source for source in nemotron_v1["metadata"]["problem_source"]],
+                "question": [x["messages"][0]["content"] for x in nemotron_v1],
+                "answer": [eval(x["metadata"])["expected_answer"] for x in nemotron_v1],
+                "solution": [x["messages"][1]["content"] for x in nemotron_v1],
+                "source": ["nemotron-v1/" + eval(x["metadata"])["problem_source"] for x in nemotron_v1],
                 "model": nemotron_v1["generator"],
             },
             # {
@@ -232,9 +233,9 @@ if __name__ == "__main__":
             {
                 "name": "open-thoughts-3",
                 "dataset": open_thoughts_3,
-                "question": [x[0]["value"] for x in open_thoughts_3["conversations"]],
+                "question": [x["conversations"][0]["value"] for x in open_thoughts_3],
                 "answer": [None] * len(open_thoughts_3),
-                "solution": [x[1]["value"] for x in open_thoughts_3["conversations"]],
+                "solution": [x["conversations"][1]["value"] for x in open_thoughts_3],
                 "source": ["open-thoughts-3/" + source if source is not None else None for source in open_thoughts_3["source"]],
                 "model": ["unknown"] * len(open_thoughts_3),
             },
@@ -248,7 +249,7 @@ if __name__ == "__main__":
                 "model": ["deepseek-r1"] * len(s1k_1_1),
             },
         ]
-        fused_cot = fusion_datasets(cot_datasets, max_per_dataset=1000)
+        fused_cot = fusion_datasets(cot_datasets)
         fused_cot = fused_cot.filter(lambda x: x["solution"] is not None).shuffle(seed=0)
         if args.n != -1:
             fused_cot = fused_cot.select(range(args.n))

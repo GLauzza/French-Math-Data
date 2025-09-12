@@ -67,7 +67,7 @@ def filter_am_deepseek_r1_0528_distill(dataset):
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][1]["info"]["ground_truth"], 0, 50))
 
     # PPL too high
-    dataset = dataset.filter(lambda x: x["conversations"][1]["info"]["ppl"] < 3)
+    dataset = dataset.filter(lambda x: x["conversations"][1]["info"]["ppl"] < 3.25)
 
     # Invalid solution
     dataset = dataset.filter(lambda x: x["conversations"][1]["info"]["verify_score"] == 1)
@@ -75,11 +75,11 @@ def filter_am_deepseek_r1_0528_distill(dataset):
     # Non-math question
     dataset = dataset.filter(lambda x: x["conversations"][0]["info"]["category"] == "math")
 
-    # Answer in solution different
-    dataset = dataset.filter(lambda x: verify(
-        parse(to_latex(x["conversations"][1]["info"]["ground_truth"])),
-        parse(x["conversations"][1]["value"])
-    ))
+    # Answer in solution different (null)
+    # dataset = dataset.filter(lambda x: verify(
+    #     parse(to_latex(x["conversations"][1]["info"]["ground_truth"])),
+    #     parse(x["conversations"][1]["value"])
+    # ))
 
     n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
     print(f"Tokens after filtering: {n_tokens/1000000000}B")
@@ -240,7 +240,7 @@ def filter_nemotron_v1(dataset):
     dataset = dataset.filter(lambda x: filter_n_tokens(x["messages"][1]["content"], 0, 16384))
 
     # Answer too long
-    # dataset = dataset.filter(lambda x: filter_n_tokens(x["metadata"]["expected_answer"], 0, 50))
+    # dataset = dataset.filter(lambda x: filter_n_tokens(eval(x["metadata"])["expected_answer"], 0, 50))
 
     # Non-math question
     dataset = dataset.filter(lambda x: x["category"] == "math")
@@ -250,7 +250,7 @@ def filter_nemotron_v1(dataset):
 
     # Answer in solution different
     dataset = dataset.filter(lambda x: verify(
-        parse(to_latex(x["metadata"]["expected_answer"])),
+        parse(to_latex(eval(x["metadata"])["expected_answer"])),
         parse(x["messages"][1]["content"])
     ))
 
@@ -338,6 +338,7 @@ def filter_open_math_reasoning(dataset):
     # Answer extracted
     dataset = dataset.filter(lambda x: x["problem_type"] == "has_answer_extracted")
 
+
     # Answer in solution different
     dataset = dataset.filter(lambda x: verify(
         parse(to_latex(x["expected_answer"])),
@@ -345,7 +346,7 @@ def filter_open_math_reasoning(dataset):
     ))
 
     # Too hard
-    dataset = dataset.filter(lambda x: x["pass_rate_72b_tir"] > 0.0)
+    dataset = dataset.filter(lambda x: x["pass_rate_72b_tir"] == "n/a" or float(x["pass_rate_72b_tir"]) > 0.0)
 
     n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["generated_solution"]) for x in dataset])
     print(f"Tokens after filtering: {n_tokens/1000000000}B")
