@@ -2,6 +2,7 @@ import sys
 import os
 import re
 
+from tqdm import tqdm
 from datasets import load_dataset, Dataset, load_from_disk
 from torch.utils.data import DataLoader
 
@@ -32,16 +33,17 @@ def load_data(path, data_files=None, split="train"):
 
 
 def flatten_features(dataset, column_names):
-    flat_dataset = Dataset.from_dict({k:[] for k in dataset.features.keys()})
-    for sample in dataset:
+    flattened_data = {k:[] for k in dataset.features.keys()}
+    print("FM - Flattening features")
+    for sample in tqdm(dataset):
         for i in range(len(sample[column_names[0]])):
-            flat_sample = {}
             for k,v in sample.items():
                 if type(v) == list and k in column_names:
-                    flat_sample[k] = v[i]
+                    flattened_data[k].append(v[i])
                 else:
-                    flat_sample[k] = v
-            flat_dataset = flat_dataset.add_item(flat_sample)
+                    flattened_data[k].append(v)
+    flat_dataset = Dataset.from_dict(flattened_data)
+    print("FM - Flattened features")
     return flat_dataset
 
 

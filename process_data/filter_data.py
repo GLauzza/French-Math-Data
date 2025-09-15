@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 
 from math_verify import parse, verify
 from datasets import concatenate_datasets
@@ -23,10 +24,19 @@ def similar_length(gold_length, pred_length, tol):
     return gold_length*(1+tol) >= pred_length and gold_length*(1-tol) <= pred_length
 
 
+def filter_chinese(x):
+    return not re.search(r'[\u4e00-\u9fff]+', c)
+
+
+def filter_boxed_format(x):
+    n_boxed = x.count("\\boxed{")
+    return n_boxed > 0 and n_boxed < 5
+
+
 def filter_am_deepseek_distill(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["answer"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["answer"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 256))
@@ -37,6 +47,9 @@ def filter_am_deepseek_distill(dataset):
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["ground_truth"], 0, 50))
 
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["answer"]))
+
     # PPL too high
     dataset = dataset.filter(lambda x: x["ppl"] < 2.5)
 
@@ -46,16 +59,16 @@ def filter_am_deepseek_distill(dataset):
     # Invalid solution
     dataset = dataset.filter(lambda x: x["verify_score"] == 1)
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["answer"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["answer"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_am_deepseek_r1_0528_distill(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][0]["value"], 5, 256))
@@ -81,8 +94,8 @@ def filter_am_deepseek_r1_0528_distill(dataset):
     #     parse(x["conversations"][1]["value"])
     # ))
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
@@ -105,8 +118,8 @@ def filter_big_math(dataset):
 
 def filter_deepmath(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 200))
@@ -123,16 +136,16 @@ def filter_deepmath(dataset):
         parse(x["solution"])
     ))
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_limo_v2(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 256))
@@ -149,8 +162,8 @@ def filter_limo_v2(dataset):
         parse(x["solution"])
     ))
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
@@ -170,8 +183,8 @@ def filter_limr(dataset):
 
 def filter_llama_nemotron(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["input"][0]["content"]) + x["output"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["input"][0]["content"]) + x["output"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["input"][0]["content"], 5, 256))
@@ -182,16 +195,16 @@ def filter_llama_nemotron(dataset):
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 50))
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["input"][0]["content"]) + x["output"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["input"][0]["content"]) + x["output"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_math_lvl5_fr_train(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["solution"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["solution"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["problem"], 5, 512))
@@ -202,16 +215,16 @@ def filter_math_lvl5_fr_train(dataset):
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 30))
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["solution"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["solution"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_metamath_qa(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["query"]) + x["response"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["query"]) + x["response"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["query"], 5, 256))
@@ -222,16 +235,16 @@ def filter_metamath_qa(dataset):
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 50))
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["query"]) + x["response"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["query"]) + x["response"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_nemotron_v1(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["messages"][0]["content"]) + x["messages"][1]["content"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["messages"][0]["content"]) + x["messages"][1]["content"]) for x in dataset])
+    # # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["messages"][0]["content"], 5, 256))
@@ -254,16 +267,16 @@ def filter_nemotron_v1(dataset):
         parse(x["messages"][1]["content"])
     ))
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["messages"][0]["content"]) + x["messages"][1]["content"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["messages"][0]["content"]) + x["messages"][1]["content"]) for x in dataset])
+    # # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_nemotron_v2(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["messages"][0]["content"]) + x["messages"][1]["content"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["messages"][0]["content"]) + x["messages"][1]["content"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["messages"][0]["content"], 5, 256))
@@ -286,16 +299,16 @@ def filter_nemotron_v2(dataset):
         parse(x["messages"][1]["content"])
     ))
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["messages"][0]["content"]) + x["messages"][1]["content"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["messages"][0]["content"]) + x["messages"][1]["content"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_numinamath_1_5(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["solution"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["solution"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["problem"], 5, 512))
@@ -312,16 +325,16 @@ def filter_numinamath_1_5(dataset):
     # Invalid solution
     dataset = dataset.filter(lambda x: x["solution_is_valid"] == "Yes")
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["solution"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["solution"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_open_math_reasoning(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["generated_solution"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["generated_solution"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["problem"], 5, 256))
@@ -348,16 +361,16 @@ def filter_open_math_reasoning(dataset):
     # Too hard
     dataset = dataset.filter(lambda x: x["pass_rate_72b_tir"] == "n/a" or float(x["pass_rate_72b_tir"]) > 0.0)
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["generated_solution"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["generated_solution"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_open_r1_math(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["generations"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["generations"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["problem"], 5, 256))
@@ -382,16 +395,16 @@ def filter_open_r1_math(dataset):
         parse(x["generations"])
     ))
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["generations"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["generations"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_open_thoughts_2(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][0]["value"], 5, 512))
@@ -399,16 +412,16 @@ def filter_open_thoughts_2(dataset):
     # Solution too long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][1]["value"], 0, 16384))
     
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_open_thoughts_3(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][0]["value"], 5, 512))
@@ -420,24 +433,24 @@ def filter_open_thoughts_3(dataset):
     dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][1]["value"], 0, 16384))
 
     # Answer in solution different
-    dataset = dataset.filter(lambda x: verify(
-        parse(to_latex(x["answer"])),
-        parse(x["conversations"][1]["value"])
-    ))
+    # dataset = dataset.filter(lambda x: verify(
+    #     parse(to_latex(x["answer"])),
+    #     parse(x["conversations"][1]["value"])
+    # ))
 
     # Non-math question
     dataset = dataset.filter(lambda x: x["domain"] == "math")
     
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_s1k_1_1(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["deepseek_thinking_trajectory"] + x["deepseek_attempt"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["deepseek_thinking_trajectory"] + x["deepseek_attempt"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 512))
@@ -460,16 +473,16 @@ def filter_s1k_1_1(dataset):
         parse(x["deepseek_thinking_trajectory"] + x["deepseek_attempt"])
     ))
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["deepseek_thinking_trajectory"] + x["deepseek_attempt"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["deepseek_thinking_trajectory"] + x["deepseek_attempt"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_train_math_fr(dataset, rl):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 512))
@@ -501,16 +514,16 @@ def filter_train_math_fr(dataset, rl):
     else:
         dataset = dataset.filter(lambda x : x["solution_fr_lang"][0] == "__label__fra_Latn" and x["solution_fr_lang_prob"][0] > 0.98)
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset
 
 
 def filter_train_math_en(dataset):
     n_samples = dataset.num_rows
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
-    print(f"Tokens before filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 512))
@@ -521,7 +534,7 @@ def filter_train_math_en(dataset):
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 512))
 
-    n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
-    print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
     return dataset

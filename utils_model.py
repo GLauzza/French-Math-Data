@@ -1,6 +1,7 @@
 import torch
 import gc
 
+from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from vllm import LLM, SamplingParams
 from vllm.distributed.parallel_state import destroy_model_parallel, destroy_distributed_environment
@@ -183,18 +184,27 @@ def load_model(model_path, is_vllm=False):
             print("FM - Loaded Model:", model_path)
             return model
     else:
-        try:
-            tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[0]+model_path, padding_side='left')
-            model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_map=device)
-        except:
+        if "embed" in model_path.lower():
             try:
-                tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), padding_side='left')
-                model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_map=device)
+                model = SentenceTransformer(config.MODEL_PATHS[0]+model_path)
             except:
-                tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), padding_side='left')
-                model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), device_map=device)
-        print("FM - Loaded Model:", model_path)
-        return model, tokenizer
+                try:
+                    model = SentenceTransformer(config.MODEL_PATHS[1]+(model_path.split("/")[-1]))
+                except:
+                    model = SentenceTransformer(config.MODEL_PATHS[2]+(model_path.split("/")[-1]))
+        else:
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[0]+model_path, padding_side='left')
+                model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_map=device)
+            except:
+                try:
+                    tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), padding_side='left')
+                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_map=device)
+                except:
+                    tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), padding_side='left')
+                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), device_map=device)
+            print("FM - Loaded Model:", model_path)
+            return model, tokenizer
 
 
 def free_vllm(model):

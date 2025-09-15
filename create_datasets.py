@@ -32,6 +32,10 @@ if __name__ == "__main__":
         # am_deepseek_distill = filter_am_deepseek_distill(am_deepseek_distill)
 
         am_deepseek_r1_0528_distill = load_data("a-m-team/AM-DeepSeek-R1-0528-Distilled").shuffle().select(range(50000))
+        am_deepseek_r1_0528_distill = am_deepseek_r1_0528_distill.add_column(
+            "answer",
+            [extract_boxed_text(x["conversations"][0]["value"]) for x in am_deepseek_r1_0528_distill]
+        )
         am_deepseek_r1_0528_distill = filter_am_deepseek_r1_0528_distill(am_deepseek_r1_0528_distill)
 
         # big_math = load_data("SynthLabsAI/Big-Math-RL-Verified")
@@ -75,17 +79,17 @@ if __name__ == "__main__":
         nemotron_v1 = load_data("nvidia/Nemotron-Post-Training-Dataset-v1", split="math").shuffle().select(range(50000))
         nemotron_v1 = filter_nemotron_v1(nemotron_v1)
 
-        # nemotron_v2 = load_data("nvidia/Nemotron-Post-Training-Dataset-v2")
-        # nemotron_v2 = filter_nemotron_v2(nemotron_v2)
+        # # nemotron_v2 = load_data("nvidia/Nemotron-Post-Training-Dataset-v2")
+        # # nemotron_v2 = filter_nemotron_v2(nemotron_v2)
 
-        # numinamath_1_5 = load_data("AI-MO/NuminaMath-1.5")
-        # numinamath_1_5 = filter_numinamath_1_5(numinamath_1_5)
+        # # numinamath_1_5 = load_data("AI-MO/NuminaMath-1.5")
+        # # numinamath_1_5 = filter_numinamath_1_5(numinamath_1_5)
 
         open_math_reasoning = load_data("nvidia/OpenMathReasoning", split="cot").shuffle().select(range(50000))
         open_math_reasoning = filter_open_math_reasoning(open_math_reasoning)
 
         open_r1_math = load_data("open-r1/OpenR1-Math-220k").shuffle().select(range(50000))
-        open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons']).shuffle().select(range(50))
+        open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons']).shuffle().select(range(50000))
         open_r1_math = filter_open_r1_math(open_r1_math)
 
         # open_thoughts_2 = load_data("open-thoughts/OpenThoughts2-1M", data_files="data/*.parquet")
