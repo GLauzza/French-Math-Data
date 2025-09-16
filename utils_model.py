@@ -184,7 +184,8 @@ def load_model(model_path, is_vllm=False):
             print("FM - Loaded Model:", model_path)
             return model
     else:
-        if "embed" in model_path.lower():
+        # if "embed" in model_path.lower():
+        if "embed" in model_path.lower() or "rubert" in model_path.lower():
             try:
                 model = SentenceTransformer(config.MODEL_PATHS[0]+model_path)
             except:
@@ -347,6 +348,12 @@ def get_config(name, task="math", n=1, max_length=1000000):
     elif name.startswith("Llama"):
         return (
             f"meta-llama/{name}", 
+            DEFAULT_CHAT_TEMPLATE,
+            DEFAULT_SAMPLING_PARAMS
+        )
+    elif name.startswith("rubert"):
+        return (
+            f"cointegrated/{name}", 
             DEFAULT_CHAT_TEMPLATE,
             DEFAULT_SAMPLING_PARAMS
         )

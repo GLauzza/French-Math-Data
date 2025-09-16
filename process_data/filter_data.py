@@ -24,8 +24,8 @@ def similar_length(gold_length, pred_length, tol):
     return gold_length*(1+tol) >= pred_length and gold_length*(1-tol) <= pred_length
 
 
-def filter_chinese(x):
-    return not re.search(r'[\u4e00-\u9fff]+', c)
+def filter_chinese(x, ratio=0.005):
+    return (len(re.findall(r'[\u4e00-\u9fff]+', x))/len(x)) < ratio
 
 
 def filter_boxed_format(x):
@@ -49,6 +49,9 @@ def filter_am_deepseek_distill(dataset):
 
     # Solution contains Chinese
     dataset = dataset.filter(lambda x: filter_chinese(x["answer"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["answer"]))
 
     # PPL too high
     dataset = dataset.filter(lambda x: x["ppl"] < 2.5)
@@ -78,6 +81,12 @@ def filter_am_deepseek_r1_0528_distill(dataset):
 
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][1]["info"]["ground_truth"], 0, 50))
+
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["conversations"][1]["value"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["conversations"][1]["value"]))
 
     # PPL too high
     dataset = dataset.filter(lambda x: x["conversations"][1]["info"]["ppl"] < 3.25)
@@ -130,6 +139,12 @@ def filter_deepmath(dataset):
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["final_answer"], 0, 25))
 
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["solution"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["solution"]))
+
     # Answer in solution different
     dataset = dataset.filter(lambda x: verify(
         parse(to_latex(x["final_answer"])),
@@ -155,6 +170,12 @@ def filter_limo_v2(dataset):
 
     # Answer too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 50))
+
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["solution"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["solution"]))
 
     # Answer in solution different
     dataset = dataset.filter(lambda x: verify(
@@ -195,6 +216,12 @@ def filter_llama_nemotron(dataset):
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 50))
 
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["output"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["output"]))
+
     # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["input"][0]["content"]) + x["output"]) for x in dataset])
     # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
@@ -214,6 +241,12 @@ def filter_math_lvl5_fr_train(dataset):
 
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 30))
+
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["solution"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["solution"]))
 
     # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["problem"]) + x["solution"]) for x in dataset])
     # print(f"Tokens after filtering: {n_tokens/1000000000}B")
@@ -235,6 +268,12 @@ def filter_metamath_qa(dataset):
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 50))
 
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["response"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["response"]))
+
     # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["query"]) + x["response"]) for x in dataset])
     # print(f"Tokens after filtering: {n_tokens/1000000000}B")
     print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
@@ -254,6 +293,12 @@ def filter_nemotron_v1(dataset):
 
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(eval(x["metadata"])["expected_answer"], 0, 50))
+
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["messages"][1]["content"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["messages"][1]["content"]))
 
     # Non-math question
     dataset = dataset.filter(lambda x: x["category"] == "math")
@@ -287,6 +332,12 @@ def filter_nemotron_v2(dataset):
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["metadata"]["expected_answer"], 0, 50))
 
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["messages"][1]["content"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["messages"][1]["content"]))
+
     # Non-math question
     dataset = dataset.filter(lambda x: x["category"] == "math")
 
@@ -319,6 +370,12 @@ def filter_numinamath_1_5(dataset):
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 50))
 
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["solution"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["solution"]))
+
     # Invalid problem
     dataset = dataset.filter(lambda x: x["problem_is_valid"] == "Yes")
 
@@ -344,6 +401,12 @@ def filter_open_math_reasoning(dataset):
 
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["expected_answer"], 0, 50))
+
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["generated_solution"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["generated_solution"]))
 
     # CoT format
     dataset = dataset.filter(lambda x: x["inference_mode"] == "cot")
@@ -381,6 +444,12 @@ def filter_open_r1_math(dataset):
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 50))
 
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["generations"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["generations"]))
+
     # Reasoning not complete
     dataset = dataset.filter(lambda x: x["is_reasoning_complete"] != False)
     dataset = dataset.filter(lambda x: x["finish_reasons"] is None)
@@ -411,6 +480,12 @@ def filter_open_thoughts_2(dataset):
 
     # Solution too long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][1]["value"], 0, 16384))
+
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["conversations"][1]["value"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["conversations"][1]["value"]))
     
     # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["conversations"][0]["value"]) + x["conversations"][1]["value"]) for x in dataset])
     # print(f"Tokens after filtering: {n_tokens/1000000000}B")
@@ -431,6 +506,12 @@ def filter_open_thoughts_3(dataset):
 
     # Solution too long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["conversations"][1]["value"], 0, 16384))
+
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["conversations"][1]["value"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["conversations"][1]["value"]))
 
     # Answer in solution different
     # dataset = dataset.filter(lambda x: verify(
@@ -460,6 +541,12 @@ def filter_s1k_1_1(dataset):
 
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 1024))
+
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["deepseek_thinking_trajectory"] + x["deepseek_attempt"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["deepseek_thinking_trajectory"] + x["deepseek_attempt"]))
 
     # Invalid solution
     dataset = dataset.filter(lambda x: x["deepseek_grade"] == "Yes")
