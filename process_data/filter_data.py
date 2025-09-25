@@ -33,6 +33,14 @@ def filter_boxed_format(x):
     return n_boxed > 0 and n_boxed < 5
 
 
+def add_thinking(x):
+    if not ("<think>" in x["solution"]):
+        x["solution"] = "<think>" + x["solution"]
+    if not ("</think>" in x["solution"]):
+        x["solution"] = x["solution"] + "</think>"
+    return x
+
+
 def filter_am_deepseek_distill(dataset):
     n_samples = dataset.num_rows
     # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["answer"]) for x in dataset])
@@ -576,7 +584,7 @@ def filter_train_math_fr(dataset, rl):
 
     # Solution too long
     if not rl:
-        dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 16384))
+        dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 17000))
 
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 512))
@@ -590,16 +598,16 @@ def filter_train_math_fr(dataset, rl):
         dataset = dataset.filter(lambda x: x["valid"])
 
     # Translation length don't match
-    dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["question_en"]), get_n_tokens(x["question"]), 0.5)))
+    dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["question_en"]), get_n_tokens(x["question"]), 0.4)))
     if not rl:
-        dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["solution_en"]), get_n_tokens(x["solution"]), 0.5)))
-    dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["answer_en"]), get_n_tokens(x["answer"]), 0.2)))
+        dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["solution_en"]), get_n_tokens(x["solution"]), 0.4)))
+    dataset = dataset.filter(lambda x: (similar_length(get_n_tokens(x["answer_en"]), get_n_tokens(x["answer"]), 0.4)))
 
     # Not French
     if rl:
         dataset = dataset.filter(lambda x : x["answer_fr_lang"][0] == "__label__fra_Latn" and x["answer_fr_lang_prob"][0] > 0.9)
     else:
-        dataset = dataset.filter(lambda x : x["solution_fr_lang"][0] == "__label__fra_Latn" and x["solution_fr_lang_prob"][0] > 0.98)
+        dataset = dataset.filter(lambda x : x["solution_fr_language_classification"][0] == "__label__fra_Latn" and x["solution_fr_language_classification_prob"][0] > 0.97)
 
     # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
     # print(f"Tokens after filtering: {n_tokens/1000000000}B")
@@ -620,6 +628,10 @@ def filter_train_math_en(dataset):
 
     # Answer too long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 512))
+
+    # Format thinking
+    dataset = dataset.filter(lambda x: not(("<think>" in x["solution"]) and not ("</think>" in x["solution"])))
+    dataset = dataset.map(add_thinking)
 
     # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
     # print(f"Tokens after filtering: {n_tokens/1000000000}B")

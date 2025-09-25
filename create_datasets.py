@@ -34,7 +34,7 @@ if __name__ == "__main__":
         am_deepseek_r1_0528_distill = load_data("a-m-team/AM-DeepSeek-R1-0528-Distilled").shuffle().select(range(50000))
         am_deepseek_r1_0528_distill = am_deepseek_r1_0528_distill.add_column(
             "answer",
-            [extract_boxed_text(x["conversations"][0]["value"]) for x in am_deepseek_r1_0528_distill]
+            [extract_boxed_text(x["conversations"][1]["value"]) for x in am_deepseek_r1_0528_distill]
         )
         am_deepseek_r1_0528_distill = filter_am_deepseek_r1_0528_distill(am_deepseek_r1_0528_distill)
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
                 "name": "am-deepseek-r1-0528-distill",
                 "dataset": am_deepseek_r1_0528_distill,
                 "question": [x["conversations"][0]["value"] for x in am_deepseek_r1_0528_distill],
-                "answer": [x["conversations"][1]["info"]["ground_truth"] for x in am_deepseek_r1_0528_distill],
+                "answer": x["answer"],
                 "solution": [x["conversations"][1]["value"] for x in am_deepseek_r1_0528_distill],
                 "source": ["am-deepseek-r1-0528-distill/" + x["conversations"][0]["info"]["source"] for x in am_deepseek_r1_0528_distill],
                 "model": [x["conversations"][1]["info"]["model_name"] for x in am_deepseek_r1_0528_distill],
@@ -238,7 +238,7 @@ if __name__ == "__main__":
                 "name": "open-thoughts-3",
                 "dataset": open_thoughts_3,
                 "question": [x["conversations"][0]["value"] for x in open_thoughts_3],
-                "answer": [None] * len(open_thoughts_3),
+                "answer": x["answer"],
                 "solution": [x["conversations"][1]["value"] for x in open_thoughts_3],
                 "source": ["open-thoughts-3/" + source if source is not None else None for source in open_thoughts_3["source"]],
                 "model": ["unknown"] * len(open_thoughts_3),
@@ -406,22 +406,22 @@ if __name__ == "__main__":
 
         train_math_datasets = [
             {
-                "name": "deepmath",
+                "name": "french",
                 "dataset": train_math_fr,
                 "question": train_math_fr["question"],
                 "answer": train_math_fr["answer"],
                 "solution": train_math_fr["solution"],
-                "source": ["deepmath"] * len(train_math_fr),
-                "model": ["deepseek-r1"] * len(train_math_fr),
+                "source": train_math_fr["source"],
+                "model": train_math_fr["model"],
             },
             {
-                "name": "deepmath",
+                "name": "english",
                 "dataset": train_math_en,
                 "question": train_math_en["question"],
                 "answer": train_math_en["answer"],
                 "solution": train_math_en["solution"],
-                "source": ["deepmath"] * len(train_math_en),
-                "model": ["deepseek-r1"] * len(train_math_en),
+                "source": train_math_en["source"],
+                "model": train_math_en["model"],
             },
         ]
 
@@ -429,4 +429,55 @@ if __name__ == "__main__":
 
         train_math.save_to_disk(config.DATA_PATHS[1] + "Train-Math")
         train_math.save_to_disk(config.DATA_PATHS[2] + "Train-Math")
+
+    if "Train-Math-en" in args.datasets:
+        train_math_en = load_data("Fused-CoT-Dedup")
+        train_math_en = filter_train_math_en(train_math_en).shuffle(seed=0)
+
+        train_math_datasets = [
+            {
+                "name": "english",
+                "dataset": train_math_en,
+                "question": train_math_en["question"],
+                "answer": train_math_en["answer"],
+                "solution": train_math_en["solution"],
+                "source": train_math_en["source"],
+                "model": train_math_en["model"],
+            },
+        ]
+
+        train_math = fusion_datasets(train_math_datasets)
+
+        features = set(train_math_datasets[0].keys()) - set(["name", "dataset"])
+        datamix = {}
+        for feature in features:
+            datamix[feature] = []
+        
+        for source, ratio in zip([
+            "s1k-1.1",
+            "open-thoughts-3",
+            "open-r1-math",
+            "open-math-reasoning",
+            "nemotron-v1",
+            "limo_v2",
+            "deepmath",
+            "am-deepseek-r1-0528-distill"
+        ], [
+            0.01,
+            0.05,
+            0.05,
+            0.3,
+            0.3,
+            0.01,
+            0.08,
+            0.2
+        ]):
+            subset = train_math.filter(lambda x: x["source"].split("/")[0] == source)
+            n_samples = int(args.n*ratio)
+            for feature in features:
+                datamix[feature].extend(sample_n_wo_repl(subset[feature], n_samples))
+        
+        datamix = Dataset.from_dict(datamix).shuffle(seed=0)
+        datamix.save_to_disk(config.DATA_PATHS[1] + "Train-Math-en-big")
+        datamix.save_to_disk(config.DATA_PATHS[2] + "Train-Math-en-big")
 

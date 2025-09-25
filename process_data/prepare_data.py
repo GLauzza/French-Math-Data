@@ -61,6 +61,14 @@ def fusion_datasets(datasets, max_per_dataset=-1):
     return Dataset.from_dict(fused_dataset)
 
 
+def sample_n_wo_repl(x, n):
+    samples = []
+    for i in range(n//len(x)):
+        samples.extend(list(x))
+    samples.extend(list(x)[:n%len(x)])
+    return samples
+
+
 def dirty_remove_math(text):
     letters = "a-zA-ZàâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ"
     # remove latex and math content

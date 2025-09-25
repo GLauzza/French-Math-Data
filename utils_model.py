@@ -59,24 +59,27 @@ USER_INSTRUCTIONS = {
     "translation_question": (
         "Please translate sentence by sentence the full following question in French.\n"
         "- Only output the translation.\n"
+        "- Only translate what is after <|Question|>.\n"
         "- Don't solve the problem, only translate.\n"
         "- Preserve any mathematical formula formatting.\n"
-        "Question:\n"
+        "<|Question|>\n"
     ),
     "translation_solution": (
         "Please translate sentence by sentence the full following text in French.\n"
         "- Only output the translation.\n"
+        "- Only translate what is after <|Text|>.\n"
         # "- Don't summarize.\n"
         "- Don't solve the problem, only translate.\n"
         "- Preserve any mathematical formula formatting.\n"
         "- Don't translate what is inside \\boxed{}.\n"
-        "Text:\n"
+        "<|Text|>\n"
     ),
     "translation_answer": (
         "Please translate sentence by sentence the full following answer in French.\n"
         "- Only output the translation.\n"
+        "- Only translate what is after <|Answer|>.\n"
         "- Preserve any mathematical formula formatting.\n"
-        "Answer:\n"
+        "<|Answer|>\n"
     ),
     "topic": (
         "Please classify the math topics of the following text.\n"
@@ -184,8 +187,7 @@ def load_model(model_path, is_vllm=False):
             print("FM - Loaded Model:", model_path)
             return model
     else:
-        # if "embed" in model_path.lower():
-        if "embed" in model_path.lower() or "rubert" in model_path.lower():
+        if "embed" in model_path.lower():
             try:
                 model = SentenceTransformer(config.MODEL_PATHS[0]+model_path)
             except:
@@ -348,12 +350,6 @@ def get_config(name, task="math", n=1, max_length=1000000):
     elif name.startswith("Llama"):
         return (
             f"meta-llama/{name}", 
-            DEFAULT_CHAT_TEMPLATE,
-            DEFAULT_SAMPLING_PARAMS
-        )
-    elif name.startswith("rubert"):
-        return (
-            f"cointegrated/{name}", 
             DEFAULT_CHAT_TEMPLATE,
             DEFAULT_SAMPLING_PARAMS
         )

@@ -5,11 +5,25 @@ import shutil
 
 from semhash import SemHash
 from datasets import load_dataset, Dataset
+from math_verify import verify, parse
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import config
 from prepare_data import *
 from utils_model import *
+from extract_answer import *
+
+
+def normalize_text(text):
+    return " ".join((text or "").lower().strip().split())
+
+
+def record_key(r):
+    """Deduplication key: only question + answer, ignore solution."""
+    return (
+        normalize_text(r.get("question", "")),
+        normalize_text(r.get("answer", "")),
+    )
 
 
 def merge_same_answer(records):
@@ -17,7 +31,10 @@ def merge_same_answer(records):
     for rec in records:
         cluster_ind = None
         for i, cluster in enumerate(merged_clusters):
-            if cluster[0]["answer"] == rec["answer"]:
+            if verify(
+                parse(to_latex(cluster[0].get("answer", ""))),
+                parse(to_latex(rec.get("answer", "")))
+            ):
                 cluster_ind = i
         if cluster_ind is None:
             merged_clusters.append([rec])
@@ -27,15 +44,17 @@ def merge_same_answer(records):
 
 
 def dedup(model, dataset, threshold, n, criterion):
-    print("a")
     # Convert to record format
     records = [dict(sample) for sample in dataset]
-    print("b")
+    for i, rec in enumerate(records):
+        if rec["answer"] is None:
+            rec["answer"] = ""
+        rec["id"] = i
 
     # Build SemHash index
     semhash_index = SemHash.from_records(
         records=records,
-        columns=["question"],
+        columns=["question", "answer"],
         model=model,
         use_ann=True
     )
@@ -44,17 +63,45 @@ def dedup(model, dataset, threshold, n, criterion):
     dedup_result = semhash_index.self_deduplicate(threshold=threshold)
 
     dedup_samples = []
+    all_clustered = set()
+    all_deduped = set()
 
+    print("n records", len(records))
+    print("n dedup", len(dedup_result.filtered))
+    tot = 0
+    clustered = []
+    for dup in dedup_result.filtered:
+        # print("\n\nn dup", len(dup.duplicates))
+        tot += 1 + len(dup.duplicates)
+        clustered.extend([dup.record["id"]] + [sample[0]["id"] for sample in dup.duplicates])
+    print("tot", tot)
+    print("In clusters", len(clustered), "\nunique", len(set(clustered)))
+
+
+    # Deduplicate within clusters
     for dup in dedup_result.filtered:
         all_records = [dup.record] + [sample[0] for sample in dup.duplicates]
-        # Merge cluster if answers in duplicates match
+        for rec in all_records:
+            k = record_key(rec)
+            all_clustered.add(k)
         dup_clusters = merge_same_answer(all_records)
         for cluster in dup_clusters:
             if criterion == "shortest_cot":
                 sorted_cluster = sorted(cluster, key=(lambda x: len(x["solution"])))
             else:
                 raise Exception("Criterion not supported")
-            dedup_samples.extend(sorted_cluster[:n])
+            for sample in sorted_cluster[:n]:
+                k = record_key(sample)
+                if k not in all_deduped:
+                    dedup_samples.append(sample)
+                    all_deduped.add(k)
+
+    # Add remaining unique records
+    for rec in records:
+        k = record_key(rec)
+        if k not in all_clustered:
+            dedup_samples.append(rec)
+            all_clustered.add(k)
 
     print(f"Filtered {100 * (len(records) - len(dedup_samples)) / len(records)}% of the dataset")
     print("FM - Deduplicated")
