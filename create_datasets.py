@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 import argparse
+import re
 
 from datasets import load_dataset, Dataset, Value
 import numpy as np
@@ -12,6 +13,12 @@ from process_data.utils_data import *
 from process_data.prepare_data import *
 from process_data.filter_data import *
 from process_data.extract_answer import *
+
+def remove_instruct_translation(x):
+    solution_begin = x["solution"][:500].lower()
+    if "texte" in solution_begin and "trad" in solution_begin:
+        x["solution"] = re.split(r'texte[\s|>]*', solution, flags=re.IGNORECASE, maxsplit=1)[1]
+    return x
 
 
 if __name__ == "__main__":
@@ -395,6 +402,8 @@ if __name__ == "__main__":
             train_math_fr = train_math_fr.rename_column("solution_fr" + model_ext, "solution")
 
             train_math_fr = train_math_fr.rename_column("valid_fr" + model_ext, "valid")
+
+        train_math_fr = train_math_fr.map(remove_instruct_translation)
 
         train_math_fr = filter_train_math_fr(train_math_fr, args.rl).shuffle(seed=0)
         if args.n != -1:

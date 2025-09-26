@@ -138,6 +138,7 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=-1, help='Batch size')
     parser.add_argument('--chunk_size', type=int, default=-1, help='Perform task on chunks of input')
     parser.add_argument('--subpart', type=int, default=0, help='Subpart to run the task on')
+    parser.add_argument('--n_part', type=int, default=1, help='Subpart to run the task on')
     args = parser.parse_args()
 
     model_path, chat_template_fun, sampling_params = get_config(args.model, task=args.task, n=1)
