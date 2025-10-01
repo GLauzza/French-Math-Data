@@ -170,8 +170,8 @@ if __name__ == "__main__":
 
     raw_dataset = load_data(args.dataset)
     raw_dataset = raw_dataset.select(range(
-        int((args.subpart/8)*len(raw_dataset)),
-        int(((args.subpart+1)/8)*len(raw_dataset))
+        int((args.subpart/args.n_part)*len(raw_dataset)),
+        int(((args.subpart+1)/args.n_part)*len(raw_dataset))
     ))
     dataset, dataloader, _ = prepare_inference_data(
         raw_dataset,
