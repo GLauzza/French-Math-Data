@@ -38,7 +38,7 @@ if __name__ == "__main__":
         # am_deepseek_distill = load_data("a-m-team/AM-DeepSeek-Distilled-40M", data_files="math_r1_*.jsonl")
         # am_deepseek_distill = filter_am_deepseek_distill(am_deepseek_distill)
 
-        am_deepseek_r1_0528_distill = load_data("a-m-team/AM-DeepSeek-R1-0528-Distilled").shuffle().select(range(50000))
+        am_deepseek_r1_0528_distill = load_data("a-m-team/AM-DeepSeek-R1-0528-Distilled").shuffle().select(range(100000))
         am_deepseek_r1_0528_distill = am_deepseek_r1_0528_distill.add_column(
             "answer",
             [extract_boxed_text(x["conversations"][1]["value"]) for x in am_deepseek_r1_0528_distill]
@@ -48,12 +48,12 @@ if __name__ == "__main__":
         # big_math = load_data("SynthLabsAI/Big-Math-RL-Verified")
         # big_math = filter_big_math(big_math)
 
-        deepmath = load_data("zwhe99/DeepMath-103K").shuffle().select(range(50000))
+        deepmath = load_data("zwhe99/DeepMath-103K").shuffle().select(range(100000))
         deepmath_solutions = list(deepmath["r1_solution_1"]) + list(deepmath["r1_solution_2"]) + list(deepmath["r1_solution_3"])
         deepmath = concatenate_datasets([deepmath] * 3).add_column(
             "solution",
             deepmath_solutions
-        ).shuffle().select(range(50000))
+        ).shuffle().select(range(100000))
         deepmath = filter_deepmath(deepmath)
 
         limo_v2 = load_data("GAIR/LIMO-v2")
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         # )
         # metamath_qa = filter_metamath_qa(metamath_qa)
 
-        nemotron_v1 = load_data("nvidia/Nemotron-Post-Training-Dataset-v1", split="math").shuffle().select(range(50000))
+        nemotron_v1 = load_data("nvidia/Nemotron-Post-Training-Dataset-v1", split="math").shuffle().select(range(100000))
         nemotron_v1 = filter_nemotron_v1(nemotron_v1)
 
         # # nemotron_v2 = load_data("nvidia/Nemotron-Post-Training-Dataset-v2")
@@ -92,27 +92,34 @@ if __name__ == "__main__":
         # # numinamath_1_5 = load_data("AI-MO/NuminaMath-1.5")
         # # numinamath_1_5 = filter_numinamath_1_5(numinamath_1_5)
 
-        open_math_reasoning = load_data("nvidia/OpenMathReasoning", split="cot").shuffle().select(range(50000))
+        open_math_reasoning = load_data("nvidia/OpenMathReasoning", split="cot").shuffle().select(range(100000))
         open_math_reasoning = filter_open_math_reasoning(open_math_reasoning)
 
         open_r1_math = load_data("open-r1/OpenR1-Math-220k").shuffle().select(range(50000))
-        open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons']).shuffle().select(range(50000))
+        open_r1_math = flatten_features(open_r1_math, ['generations', 'is_reasoning_complete', 'correctness_math_verify', 'correctness_llama', 'finish_reasons']).shuffle().select(range(100000))
         open_r1_math = filter_open_r1_math(open_r1_math)
 
         # open_thoughts_2 = load_data("open-thoughts/OpenThoughts2-1M", data_files="data/*.parquet")
         # open_thoughts_2 = filter_open_thoughts_2(open_thoughts_2)
         
-        open_thoughts_3 = load_data("open-thoughts/OpenThoughts3-1.2M").shuffle().select(range(50000))
+        open_thoughts_3 = load_data("open-thoughts/OpenThoughts3-1.2M").shuffle().select(range(100000))
         open_thoughts_3 = open_thoughts_3.add_column(
             "answer",
             [extract_boxed_text(x["conversations"][1]["value"]) for x in open_thoughts_3]
         )
         open_thoughts_3 = filter_open_thoughts_3(open_thoughts_3)
 
-        # #TODO: PENSEZ
+        #TODO: PENSEZ
 
         s1k_1_1 = load_data("simplescaling/s1K-1.1")
         s1k_1_1 = filter_s1k_1_1(s1k_1_1)
+        
+        # open_thoughts_3_100k = load_data("mlfoundations-dev/openthoughts3_math_100k").shuffle()
+        # open_thoughts_3_100k = open_thoughts_3_100k.add_column(
+        #     "answer",
+        #     [extract_boxed_text(x["final_reasoning_trace"]) for x in open_thoughts_3_100k]
+        # )
+        # open_thoughts_3_100k = filter_open_thoughts_3_100k(open_thoughts_3_100k)
 
         cot_datasets = [
             # {
@@ -128,7 +135,7 @@ if __name__ == "__main__":
                 "name": "am-deepseek-r1-0528-distill",
                 "dataset": am_deepseek_r1_0528_distill,
                 "question": [x["conversations"][0]["value"] for x in am_deepseek_r1_0528_distill],
-                "answer": x["answer"],
+                "answer": am_deepseek_r1_0528_distill["answer"],
                 "solution": [x["conversations"][1]["value"] for x in am_deepseek_r1_0528_distill],
                 "source": ["am-deepseek-r1-0528-distill/" + x["conversations"][0]["info"]["source"] for x in am_deepseek_r1_0528_distill],
                 "model": [x["conversations"][1]["info"]["model_name"] for x in am_deepseek_r1_0528_distill],
@@ -245,7 +252,7 @@ if __name__ == "__main__":
                 "name": "open-thoughts-3",
                 "dataset": open_thoughts_3,
                 "question": [x["conversations"][0]["value"] for x in open_thoughts_3],
-                "answer": x["answer"],
+                "answer": open_thoughts_3["answer"],
                 "solution": [x["conversations"][1]["value"] for x in open_thoughts_3],
                 "source": ["open-thoughts-3/" + source if source is not None else None for source in open_thoughts_3["source"]],
                 "model": ["unknown"] * len(open_thoughts_3),
@@ -259,11 +266,41 @@ if __name__ == "__main__":
                 "source": ["s1k-1.1/" + source for source in s1k_1_1["source_type"]],
                 "model": ["deepseek-r1"] * len(s1k_1_1),
             },
+        #     {
+        #         "name": "open_thoughts_3_100k",
+        #         "dataset": open_thoughts_3_100k,
+        #         "question": open_thoughts_3_100k["instruction_seed"],
+        #         "answer": open_thoughts_3_100k["answer"],
+        #         "solution":open_thoughts_3_100k["final_reasoning_trace"],
+        #         "source": ["open_thoughts_3_100k/" + source for source in open_thoughts_3_100k["_source"]],
+        #         "model": ["QwQ-32b"] * len(open_thoughts_3_100k),
+        #     },
         ]
         fused_cot = fusion_datasets(cot_datasets)
         fused_cot = fused_cot.filter(lambda x: x["solution"] is not None).shuffle(seed=0)
         if args.n != -1:
             fused_cot = fused_cot.select(range(args.n))
+
+        fused_cot_en_big = load_data("me/Train-Math-en-big")
+        already_translated = set()
+        for example in fused_cot_en_big:
+            if isinstance(example, dict):
+                example_tuple = tuple(sorted(example.items()))
+            else:
+                example_tuple = example
+            already_translated.add(example_tuple)
+
+        def not_in_b_full(example):
+            if isinstance(example, dict):
+                example_tuple = tuple(sorted(example.items()))
+            else:
+                example_tuple = example
+            return (example_tuple not in already_translated) or ("s1k-1.1" in example["source"]) or ("limo_v2" in example["source"])
+
+        print("len before", len(fused_cot))
+        fused_cot = fused_cot.filter(not_in_b_full)
+        print("len after", len(fused_cot))
+
         fused_cot.save_to_disk(config.DATA_PATHS[1] + "Fused-CoT")
         fused_cot.save_to_disk(config.DATA_PATHS[2] + "Fused-CoT")
 
@@ -487,6 +524,6 @@ if __name__ == "__main__":
                 datamix[feature].extend(sample_n_wo_repl(subset[feature], n_samples))
         
         datamix = Dataset.from_dict(datamix).shuffle(seed=0)
-        datamix.save_to_disk(config.DATA_PATHS[1] + "Train-Math-en-big")
-        datamix.save_to_disk(config.DATA_PATHS[2] + "Train-Math-en-big")
+        datamix.save_to_disk(config.DATA_PATHS[1] + "Train-Math-en")
+        datamix.save_to_disk(config.DATA_PATHS[2] + "Train-Math-en")
 

@@ -88,6 +88,8 @@ def dedup(model, dataset, threshold, n, criterion):
         for cluster in dup_clusters:
             if criterion == "shortest_cot":
                 sorted_cluster = sorted(cluster, key=(lambda x: len(x["solution"])))
+            if criterion == "already_sampled":
+                sorted_cluster = sorted(cluster, key=(lambda x: x["already_sampled"]), reverse=True)
             else:
                 raise Exception("Criterion not supported")
             for sample in sorted_cluster[:n]:

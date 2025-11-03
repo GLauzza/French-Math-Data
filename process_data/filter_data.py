@@ -574,6 +574,41 @@ def filter_s1k_1_1(dataset):
     return dataset
 
 
+def filter_open_thoughts_3_100k(dataset):
+    n_samples = dataset.num_rows
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["instruction_seed"]) + x["final_reasoning_trace"]) for x in dataset])
+    # print(f"Tokens before filtering: {n_tokens/1000000000}B")
+
+    # Question too short/long
+    # dataset = dataset.filter(lambda x: filter_n_tokens(x["instruction_seed"], 5, 512))
+
+    # Answer too long
+    # dataset = dataset.filter(lambda x: filter_n_tokens(x["answer"], 0, 256))
+
+    # Solution too long
+    dataset = dataset.filter(lambda x: filter_n_tokens(x["final_reasoning_trace"], 0, 16384))
+
+    # Solution contains Chinese
+    dataset = dataset.filter(lambda x: filter_chinese(x["final_reasoning_trace"]))
+
+    # Solution well formated
+    dataset = dataset.filter(lambda x: filter_boxed_format(x["final_reasoning_trace"]))
+
+    # Answer in solution different
+    # dataset = dataset.filter(lambda x: verify(
+    #     parse(to_latex(x["answer"])),
+    #     parse(x["conversations"][1]["value"])
+    # ))
+
+    # Non-math question
+    dataset = dataset.filter(lambda x: x["_domain"] == "math")
+    
+    # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["instruction_seed"]) + x["final_reasoning_trace"]) for x in dataset])
+    # print(f"Tokens after filtering: {n_tokens/1000000000}B")
+    print(f"Filtered {100 * (n_samples - dataset.num_rows) / n_samples}% of the dataset")
+    return dataset
+
+
 def filter_train_math_fr(dataset, rl):
     n_samples = dataset.num_rows
     # n_tokens = sum([get_n_tokens(temp_chat_template_fun(config.TOKENIZER, x["question"]) + x["solution"]) for x in dataset])
@@ -622,7 +657,7 @@ def filter_train_math_en(dataset):
 
     # Question too short/long
     # dataset = dataset.filter(lambda x: filter_n_tokens(x["question"], 5, 512))
-    dataset = dataset.select(range(1000))
+
     # Solution too long
     dataset = dataset.filter(lambda x: filter_n_tokens(x["solution"], 0, 16384))
 

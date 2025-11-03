@@ -1,6 +1,7 @@
 import shutil
 import argparse
 
+import unsloth
 from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
 from transformers import TrainingArguments, Trainer
 
@@ -19,7 +20,7 @@ def prepare_data(chat_template_fun, dataset, tokenizer):
     return dataset
 
 
-def train(model, tokenizer, dataset, new_model_name):
+def train_hf(model, tokenizer, dataset, new_model_name):
     print("FM - Instantiate Training")
     # training_args = SFTConfig(
     #     dataset_text_field = "chat_input",
@@ -106,6 +107,42 @@ def train(model, tokenizer, dataset, new_model_name):
     print("FM - Training")
     trainer.train()
 
+def train_unsloth(model, tokenizer, dataset, new_model_name):
+    collator = DataCollatorForCompletionOnlyLM(
+        response_template="<|im_start|>assistant\n",
+        tokenizer=tokenizer
+    )
+
+    trainer = SFTTrainer(
+        model = model,
+        processing_class = tokenizer,
+        train_dataset = dataset,
+        eval_dataset = None, # Can set up evaluation!
+        data_collator=collator,
+        args = SFTConfig(
+            dataset_text_field = "chat_input",
+            per_device_train_batch_size = 1,
+            gradient_accumulation_steps = 64, # Use GA to mimic batch size!
+            ddp_find_unused_parameters = False,
+            gradient_checkpointing=True,    
+            warmup_steps = 25,
+            num_train_epochs = 1, # Set this for 1 full training run.
+            learning_rate = 5e-5, # Reduce to 2e-5 for long training runs
+            logging_steps = 1,
+            optim = "adamw_8bit",
+            weight_decay = 0.0,
+            lr_scheduler_type = "cosine",
+            seed = 0,
+            report_to = "none", # Use TrackIO/WandB etc
+            dataloader_pin_memory=True,
+            dataloader_num_workers=0,
+            max_seq_length=18000,
+            # packing=True,
+        ),
+    )
+
+    print("FM - Training")
+    trainer.train()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train model with TRL')
@@ -115,7 +152,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     model_path, chat_template_fun, _ = get_config(args.model)
-    model, tokenizer = load_model(model_path)
+    model, tokenizer = load_model(model_path, is_unsloth=True)
+    print("device map", model.hf_device_map)
 
     dataset = load_data(args.dataset)
     dataset = prepare_data(chat_template_fun, dataset, tokenizer)
@@ -125,7 +163,7 @@ if __name__ == "__main__":
     else:
         new_model_name = config.MODEL_PATHS[1] + args.model + "-SFT-" + args.dataset
 
-    train(model, tokenizer, dataset, new_model_name)
+    train_unsloth(model, tokenizer, dataset, new_model_name)
 
     print("FM - Saving")
     model.save_pretrained(config.MODEL_PATHS[1] + new_model_name, safe_serialization=False)

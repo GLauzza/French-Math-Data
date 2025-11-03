@@ -1,3 +1,5 @@
+import unsloth
+
 import torch
 import gc
 
@@ -6,6 +8,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from vllm import LLM, SamplingParams
 from vllm.distributed.parallel_state import destroy_model_parallel, destroy_distributed_environment
 import fasttext
+
 
 import config
 
@@ -134,7 +137,7 @@ USER_INSTRUCTIONS = {
 }
 
 
-def load_model(model_path, is_vllm=False):
+def load_model(model_path, is_vllm=False, is_unsloth=False):
     print("FM - Loading Model:", model_path)
     if model_path == "facebook/fasttext-language-identification":
         return fasttext.load_model(config.MODEL_PATHS[0]+model_path+"/model.bin")
@@ -165,27 +168,58 @@ def load_model(model_path, is_vllm=False):
             print("FM - Loaded Model:", model_path)
             return model
         else:
-            try:
-                model = LLM(
-                    config.MODEL_PATHS[0]+model_path,
-                    enable_prefix_caching=True,
-                    seed=0,
-                )
-            except:
-                try:
+           try:
+               model = LLM(
+                   config.MODEL_PATHS[0]+model_path,
+                   enable_prefix_caching=True,
+                   seed=0,
+               )
+           except:
+               try:
                     model = LLM(
                         config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
                         enable_prefix_caching=True,
                         seed=0,
                     )
-                except:
-                    model = LLM(
-                        config.MODEL_PATHS[2]+(model_path.split("/")[-1]),
-                        enable_prefix_caching=True,
-                        seed=0,
-                    )
-            print("FM - Loaded Model:", model_path)
-            return model
+               except:
+                   model = LLM(
+                       config.MODEL_PATHS[2]+(model_path.split("/")[-1]),
+                       enable_prefix_caching=True,
+                       seed=0,
+                   )
+           print("FM - Loaded Model:", model_path)
+        return model
+    elif is_unsloth:
+        try:
+            model, tokenizer = unsloth.FastLanguageModel.from_pretrained(
+                config.MODEL_PATHS[0]+model_path, 
+                load_in_4bit = False,
+                load_in_8bit = False,
+                full_finetuning=True, 
+                max_seq_length=18000, 
+                device_map="balanced"
+            )
+        except:
+            try:
+                model, tokenizer = unsloth.FastLanguageModel.from_pretrained(
+                    config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
+                    load_in_4bit = False,
+                    load_in_8bit = False,
+                    full_finetuning=True, 
+                    max_seq_length=18000, 
+                    device_map="balanced"
+                )
+            except:
+                model, tokenizer = unsloth.FastLanguageModel.from_pretrained(
+                    config.MODEL_PATHS[2]+(model_path.split("/")[-1]), 
+                    load_in_4bit = False,
+                    load_in_8bit = False,
+                    full_finetuning=True, 
+                    max_seq_length=18000, 
+                    device_map="balanced"
+                )
+        print("FM - Loaded Model:", model_path)
+        return model, tokenizer
     else:
         if "embed" in model_path.lower():
             try:
@@ -273,6 +307,20 @@ def to_chat_template_deepseek(task):
         f"{USER_INSTRUCTIONS[task]}{x}\n{SYSTEM_INSTRUCTIONS[task]}\n{start_thinking}{language_forcing}"
     ))
 
+
+def to_chat_template_openai(task):
+    language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
+
+    return (lambda x : (
+        f"<|start|>system<|message|>You are ChatGPT, a large language model trained by OpenAI.\n"
+        f"Knowledge cutoff: 2024-06\nCurrent date: 2025-10-20\n\nReasoning: high\n\n"
+        f"# Valid channels: analysis, final. Channel must be included for every message.<|end|>"
+        f"<|start|>developer<|message|># Instructions\n\nreasoning language: French\n{SYSTEM_INSTRUCTIONS[task]}<|end|>"
+        f"<|start|>user<|message|>{USER_INSTRUCTIONS[task]}{x}<|end|>"
+        f"<|start|>assistant<|channel|>analysis<|message|>{language_forcing}"
+    ))
+
+
 def temp_chat_template_fun(tokenizer, problem):
     # messages = [
     #     {
@@ -351,6 +399,12 @@ def get_config(name, task="math", n=1, max_length=1000000):
         return (
             f"meta-llama/{name}", 
             DEFAULT_CHAT_TEMPLATE,
+            DEFAULT_SAMPLING_PARAMS
+        )
+    elif name.startswith("gpt-oss"):
+        return (
+            f"openai/{name}", 
+            to_chat_template_openai(task),
             DEFAULT_SAMPLING_PARAMS
         )
     else:
