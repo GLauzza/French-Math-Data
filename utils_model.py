@@ -137,7 +137,7 @@ USER_INSTRUCTIONS = {
 }
 
 
-def load_model(model_path, is_vllm=False, is_unsloth=False):
+def load_model(model_path, is_vllm=False, is_unsloth=False, accelerator=None):
     print("FM - Loading Model:", model_path)
     if model_path == "facebook/fasttext-language-identification":
         return fasttext.load_model(config.MODEL_PATHS[0]+model_path+"/model.bin")
@@ -232,14 +232,17 @@ def load_model(model_path, is_vllm=False, is_unsloth=False):
         else:
             try:
                 tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[0]+model_path, padding_side='left')
-                model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_map=device)
+                model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_mesh=accelerator.torch_device_mesh, tp_size=4, tp_plan="auto")
+                model = accelerator.prepare(model)
             except:
                 try:
                     tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), padding_side='left')
-                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_map=device)
+                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_mesh=accelerator.torch_device_mesh, tp_size=4, tp_plan="auto")
+                    model = accelerator.prepare(model)
                 except:
                     tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), padding_side='left')
-                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), device_map=device)
+                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), device_mesh=accelerator.torch_device_mesh, tp_size=4, tp_plan="auto")
+                    model = accelerator.prepare(model)
             print("FM - Loaded Model:", model_path)
             return model, tokenizer
 

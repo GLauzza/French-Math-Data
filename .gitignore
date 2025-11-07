@@ -16,3 +16,6 @@ wiki_topic/
 
 # Figures
 *.png
+
+# Unsloth
+/unsloth_compiled_cache
