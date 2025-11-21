@@ -137,7 +137,7 @@ USER_INSTRUCTIONS = {
 }
 
 
-def load_model(model_path, is_vllm=False, is_unsloth=False, accelerator=None):
+def load_model(model_path, is_vllm=False, is_unsloth=False, accelerator=None, pc=None):
     print("FM - Loading Model:", model_path)
     if model_path == "facebook/fasttext-language-identification":
         return fasttext.load_model(config.MODEL_PATHS[0]+model_path+"/model.bin")
@@ -197,7 +197,10 @@ def load_model(model_path, is_vllm=False, is_unsloth=False, accelerator=None):
                 load_in_8bit = False,
                 full_finetuning=True, 
                 max_seq_length=18000, 
-                device_map="balanced"
+                device_map="balanced",
+                # device_mesh=pc.build_device_mesh("cuda"), 
+                # tp_plan="auto", 
+                # use_cache=False,
             )
         except:
             try:
@@ -207,7 +210,10 @@ def load_model(model_path, is_vllm=False, is_unsloth=False, accelerator=None):
                     load_in_8bit = False,
                     full_finetuning=True, 
                     max_seq_length=18000, 
-                    device_map="balanced"
+                    device_map="balanced",
+                    # device_mesh=pc.build_device_mesh("cuda"), 
+                    # tp_plan="auto", 
+                    # use_cache=False,
                 )
             except:
                 model, tokenizer = unsloth.FastLanguageModel.from_pretrained(
@@ -216,7 +222,10 @@ def load_model(model_path, is_vllm=False, is_unsloth=False, accelerator=None):
                     load_in_8bit = False,
                     full_finetuning=True, 
                     max_seq_length=18000, 
-                    device_map="balanced"
+                    device_map="balanced",
+                    # device_mesh=pc.build_device_mesh("cuda"), 
+                    # tp_plan="auto", 
+                    # use_cache=False,
                 )
         print("FM - Loaded Model:", model_path)
         return model, tokenizer
@@ -232,17 +241,14 @@ def load_model(model_path, is_vllm=False, is_unsloth=False, accelerator=None):
         else:
             try:
                 tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[0]+model_path, padding_side='left')
-                model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_mesh=accelerator.torch_device_mesh, tp_size=4, tp_plan="auto")
-                model = accelerator.prepare(model)
+                model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_mesh=pc.build_device_mesh("cuda"), tp_plan="auto", use_cache=False)
             except:
                 try:
                     tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), padding_side='left')
-                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_mesh=accelerator.torch_device_mesh, tp_size=4, tp_plan="auto")
-                    model = accelerator.prepare(model)
+                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_mesh=pc.build_device_mesh("cuda"), tp_plan="auto", use_cache=False)
                 except:
                     tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), padding_side='left')
-                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), device_mesh=accelerator.torch_device_mesh, tp_size=4, tp_plan="auto")
-                    model = accelerator.prepare(model)
+                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), device_mesh=pc.build_device_mesh("cuda"), tp_plan="auto", use_cache=False)
             print("FM - Loaded Model:", model_path)
             return model, tokenizer
 
