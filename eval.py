@@ -131,6 +131,13 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=-1, help='Batch size')
     args = parser.parse_args()
 
-    models_configs = get_configs(args.models, task="math", n=args.n)
+    models_configs = get_configs(args.models, task="math", n=args.n, start_thinking=True)
+    # model, tokenizer = load_model(models_configs[0][0])
+    # messages = [
+    #     # {"role": "system", "content": "test_system"},
+    #     {"role": "user", "content": "test_user"},
+    #     # {"role": "assistant", "content": "test_assistant"},
+    # ]
+    # print(tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True))
 
     eval_models(models_configs, args.dataset, args.batch_size)

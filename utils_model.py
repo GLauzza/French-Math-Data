@@ -241,14 +241,14 @@ def load_model(model_path, is_vllm=False, is_unsloth=False, accelerator=None, pc
         else:
             try:
                 tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[0]+model_path, padding_side='left')
-                model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_mesh=pc.build_device_mesh("cuda"), tp_plan="auto", use_cache=False)
+                model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[0]+model_path, device_map="auto")
             except:
                 try:
                     tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), padding_side='left')
-                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_mesh=pc.build_device_mesh("cuda"), tp_plan="auto", use_cache=False)
+                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[1]+(model_path.split("/")[-1]), device_map="auto")
                 except:
                     tokenizer = AutoTokenizer.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), padding_side='left')
-                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), device_mesh=pc.build_device_mesh("cuda"), tp_plan="auto", use_cache=False)
+                    model = AutoModelForCausalLM.from_pretrained(config.MODEL_PATHS[2]+(model_path.split("/")[-1]), device_map="auto")
             print("FM - Loaded Model:", model_path)
             return model, tokenizer
 
@@ -263,27 +263,27 @@ def free_vllm(model):
     gc.collect()
 
 
-def to_chat_template_qwen_2_5(task):
+def to_chat_template_qwen_2_5(task, start_thinking):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
+    think = "<think>\n"*start_thinking
     return (lambda x : (
         f"<|im_start|>system\n{SYSTEM_INSTRUCTIONS[task]}<|im_end|>\n"
         f"<|im_start|>user\n{USER_INSTRUCTIONS[task]}{x}<|im_end|>\n"
-        f"<|im_start|>assistant\n{language_forcing}"
+        f"<|im_start|>assistant\n{think}{language_forcing}"
     ))
 
 
-def to_chat_template_qwen_3(task):
-    is_thinking = "no_"*("math" not in task)
+def to_chat_template_qwen_3(task, start_thinking):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
-    close_thinking = '\n</think>\n'*('math' not in task)
+    think = "<think>\n"*start_thinking
     return (lambda x : (
         f"<|im_start|>system\n{SYSTEM_INSTRUCTIONS[task]}<|im_end|>\n"
-        f"<|im_start|>user\n{USER_INSTRUCTIONS[task]}{x}/{is_thinking}think<|im_end|>\n"
-        f"<|im_start|>assistant\n<think>\n{language_forcing}{close_thinking}"
+        f"<|im_start|>user\n{USER_INSTRUCTIONS[task]}{x}<|im_end|>\n"
+        f"<|im_start|>assistant\n{think}{language_forcing}"
     ))
 
 
-def to_chat_template_lucie(task):
+def to_chat_template_lucie(task, start_thinking):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
     return (lambda x : (
         f"<s><|start_header_id|>system<|end_header_id|>You are a helpful assistant. {SYSTEM_INSTRUCTIONS[task]}<|eot_id|>"
@@ -292,7 +292,7 @@ def to_chat_template_lucie(task):
     ))
 
 
-def to_chat_template_phi4(task):
+def to_chat_template_phi4(task, start_thinking):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
     if task == "math" or task == "topic":
         introduction = "Your name is Phi, an AI math expert developed by Microsoft."
@@ -309,7 +309,7 @@ def to_chat_template_phi4(task):
     ))
 
 
-def to_chat_template_deepseek(task):
+def to_chat_template_deepseek(task, start_thinking):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
     start_thinking = "<think>\n"*("math" in task)
     return (lambda x : (
@@ -317,7 +317,7 @@ def to_chat_template_deepseek(task):
     ))
 
 
-def to_chat_template_openai(task):
+def to_chat_template_openai(task, start_thinking):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
 
     return (lambda x : (
@@ -330,25 +330,18 @@ def to_chat_template_openai(task):
     ))
 
 
-def temp_chat_template_fun(tokenizer, problem):
-    # messages = [
-    #     {
-    #         "role": "user", 
-    #         "content": f"Problem: {problem}\nMark your solution with \\boxed\nAnswer:"
-    #     },
-    # ]
-    messages = [
-        {
-            "role": "user", 
-            "content": problem,
-        },
-    ]
-    return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+def to_chat_template_mistral(task, start_thinking):
+    language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
 
-def get_config(name, task="math", n=1, max_length=1000000):
+    return (lambda x : (
+        f"First draft your thinking process (inner monologue) until you arrive at a response. Format your response using Markdown, and use LaTeX for any mathematical equations. Write both your thoughts and the response in the same language as the input.\n\nYour thinking process must follow the template below:[THINK]Your thoughts or/and draft, like working through an exercise on scratch paper. Be as casual and as long as you want until you are confident to generate the response. Use the same language as the input.[/THINK]Here, provide a self-contained response.\n"
+    ))
+
+
+def get_config(name, task="math", n=1, max_length=1000000, start_thinking=False):
     print("FM - Getting Config:", name, task)
-    DEFAULT_CHAT_TEMPLATE = to_chat_template_qwen_2_5(task)
-    DEFAULT_SAMPLING_PARAMS = SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=30, presence_penalty=0.5, max_tokens=min(32768, max_length), seed=0)
+    DEFAULT_CHAT_TEMPLATE = to_chat_template_qwen_2_5(task, start_thinking)
+    DEFAULT_SAMPLING_PARAMS = SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=min(38192, max_length), seed=0)
 
     if name.startswith("fasttext"):
         return (
@@ -359,7 +352,7 @@ def get_config(name, task="math", n=1, max_length=1000000):
     elif name.startswith("Qwen2.5"):
         return (
             f"Qwen/{name}",
-            to_chat_template_qwen_2_5(task),
+            to_chat_template_qwen_2_5(task, start_thinking),
             DEFAULT_SAMPLING_PARAMS
         )
     elif name.startswith("Qwen3-Embedding"):
@@ -371,38 +364,44 @@ def get_config(name, task="math", n=1, max_length=1000000):
     elif name.startswith("Qwen3"):
         return (
             f"Qwen/{name}",
-            to_chat_template_qwen_3(task),
+            to_chat_template_qwen_3(task, start_thinking),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, top_k=20, min_p=0, presence_penalty=0.5, max_tokens=min(38912, max_length), seed=0)
+        )
+    elif name.startswith("legml"):
+        return (
+            f"legmlai/{name}",
+            to_chat_template_qwen_3(task, start_thinking),
+            SamplingParams(n=n, temperature=0.6, top_p=0.9, max_tokens=min(38912, max_length), seed=0)
         )
     elif name.startswith("Lucie"):
         return (
             f"OpenLLM-France/{name}", 
-            to_chat_template_lucie(task),
+            to_chat_template_lucie(task, start_thinking),
             DEFAULT_SAMPLING_PARAMS
         )
     elif name.startswith("Phi-4"):
         return (
             f"microsoft/{name}", 
-            to_chat_template_phi4(task),
+            to_chat_template_phi4(task, start_thinking),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
     elif name.startswith("deepseek-math") or name.startswith("DeepSeek-R1"):
         return (
             f"deepseek-ai/{name}", 
-            to_chat_template_deepseek(task),
+            to_chat_template_deepseek(task, start_thinking),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
     elif name.startswith("OpenR1"):
         return (
             f"open-r1/{name}", 
-            to_chat_template_deepseek(task),
+            to_chat_template_deepseek(task, start_thinking),
             SamplingParams(n=n, temperature=0.6, top_p=0.95, max_tokens=min(32768, max_length), seed=0)
         )
     elif name.startswith("Pensez"):
         return (
             f"HoangHa/{name}", 
-            DEFAULT_CHAT_TEMPLATE,
-            SamplingParams(n=n, temperature=0.8, repetition_penalty=1.1, max_tokens=min(32768, max_length), seed=0)
+            to_chat_template_qwen_2_5(task, start_thinking),
+            SamplingParams(n=n, temperature=0, max_tokens=min(32768, max_length), seed=0)
         )
     elif name.startswith("Llama"):
         return (
@@ -413,14 +412,20 @@ def get_config(name, task="math", n=1, max_length=1000000):
     elif name.startswith("gpt-oss"):
         return (
             f"openai/{name}", 
-            to_chat_template_openai(task),
+            to_chat_template_openai(task, start_thinking),
             DEFAULT_SAMPLING_PARAMS
+        )
+    elif name.startswith("Magistral"):
+        return (
+            f"mistralai/{name}", 
+            to_chat_template_mistral(task, start_thinking),
+            SamplingParams(n=n, temperature=0.7, top_p=0.95, max_tokens=min(38912, max_length), seed=0),
         )
     else:
         raise Exception(f"Model {name} not supported. Edit utils_model.py to add support.")
 
-def get_configs(names, task="math", n=1, max_length=1000000):
+def get_configs(names, task="math", n=1, max_length=1000000, start_thinking=False):
     configs = []
     for name in names:
-        configs.append(get_config(name, task, n, max_length))
+        configs.append(get_config(name, task, n, max_length, start_thinking))
     return configs
