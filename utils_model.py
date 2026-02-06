@@ -1,4 +1,4 @@
-import unsloth
+# import unsloth
 
 import torch
 import gc
@@ -189,46 +189,46 @@ def load_model(model_path, is_vllm=False, is_unsloth=False, accelerator=None, pc
                    )
            print("FM - Loaded Model:", model_path)
         return model
-    elif is_unsloth:
-        try:
-            model, tokenizer = unsloth.FastLanguageModel.from_pretrained(
-                config.MODEL_PATHS[0]+model_path, 
-                load_in_4bit = False,
-                load_in_8bit = False,
-                full_finetuning=True, 
-                max_seq_length=18000, 
-                device_map="balanced",
-                # device_mesh=pc.build_device_mesh("cuda"), 
-                # tp_plan="auto", 
-                # use_cache=False,
-            )
-        except:
-            try:
-                model, tokenizer = unsloth.FastLanguageModel.from_pretrained(
-                    config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
-                    load_in_4bit = False,
-                    load_in_8bit = False,
-                    full_finetuning=True, 
-                    max_seq_length=18000, 
-                    device_map="balanced",
-                    # device_mesh=pc.build_device_mesh("cuda"), 
-                    # tp_plan="auto", 
-                    # use_cache=False,
-                )
-            except:
-                model, tokenizer = unsloth.FastLanguageModel.from_pretrained(
-                    config.MODEL_PATHS[2]+(model_path.split("/")[-1]), 
-                    load_in_4bit = False,
-                    load_in_8bit = False,
-                    full_finetuning=True, 
-                    max_seq_length=18000, 
-                    device_map="balanced",
-                    # device_mesh=pc.build_device_mesh("cuda"), 
-                    # tp_plan="auto", 
-                    # use_cache=False,
-                )
-        print("FM - Loaded Model:", model_path)
-        return model, tokenizer
+    # elif is_unsloth:
+    #     try:
+    #         model, tokenizer = unsloth.FastLanguageModel.from_pretrained(
+    #             config.MODEL_PATHS[0]+model_path, 
+    #             load_in_4bit = False,
+    #             load_in_8bit = False,
+    #             full_finetuning=True, 
+    #             max_seq_length=18000, 
+    #             # device_map="balanced",
+    #             # device_mesh=pc.build_device_mesh("cuda"), 
+    #             # tp_plan="auto", 
+    #             # use_cache=False,
+    #         )
+    #     except:
+    #         try:
+    #             model, tokenizer = unsloth.FastLanguageModel.from_pretrained(
+    #                 config.MODEL_PATHS[1]+(model_path.split("/")[-1]), 
+    #                 load_in_4bit = False,
+    #                 load_in_8bit = False,
+    #                 full_finetuning=True, 
+    #                 max_seq_length=18000, 
+    #                 # device_map="balanced",
+    #                 # device_mesh=pc.build_device_mesh("cuda"), 
+    #                 # tp_plan="auto", 
+    #                 # use_cache=False,
+    #             )
+    #         except:
+    #             model, tokenizer = unsloth.FastLanguageModel.from_pretrained(
+    #                 config.MODEL_PATHS[2]+(model_path.split("/")[-1]), 
+    #                 load_in_4bit = False,
+    #                 load_in_8bit = False,
+    #                 full_finetuning=True, 
+    #                 max_seq_length=18000, 
+    #                 # device_map="balanced",
+    #                 # device_mesh=pc.build_device_mesh("cuda"), 
+    #                 # tp_plan="auto", 
+    #                 # use_cache=False,
+    #             )
+    #     print("FM - Loaded Model:", model_path)
+    #     return model, tokenizer
     else:
         if "embed" in model_path.lower():
             try:
