@@ -10,7 +10,7 @@ import config
 from utils_model import *
 from process_data.prepare_data import *
 from process_data.extract_answer import *
-from diversify import *
+#from diversify import *
 
 
 def classify(model, dataset, dataloader, output_name):
@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
     model = load_model(model_path, is_vllm=True)    
 
-    raw_dataset = load_data(args.dataset)
+    raw_dataset = load_data(args.dataset).shuffle().select(range(10000))
     raw_dataset = raw_dataset.select(range(
         int((args.subpart/args.n_part)*len(raw_dataset)),
         int(((args.subpart+1)/args.n_part)*len(raw_dataset))
