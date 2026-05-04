@@ -97,8 +97,10 @@ def infer(model, dataset, dataloader, output_name, sampling_params):
     outputs = []
 
     for data in tqdm(dataloader):
+        print(data[0])
         request_outputs = model.generate(data, sampling_params)
         output = [request_output.outputs[0].text for request_output in request_outputs]
+        print(output[0])
         outputs += output
         # print(f"\n\n\nLens:{[len(sample) for sample in data]},{[len(sample) for sample in output]}\n\nInputs:\n{data}\n\nOutputs:\n{output}\n\n\n")
     print("FM - Infered")
@@ -168,7 +170,7 @@ if __name__ == "__main__":
 
     model = load_model(model_path, is_vllm=True)    
 
-    raw_dataset = load_data(args.dataset).shuffle().select(range(10000))
+    raw_dataset = load_data(args.dataset).shuffle().select(range(50000))
     raw_dataset = raw_dataset.select(range(
         int((args.subpart/args.n_part)*len(raw_dataset)),
         int(((args.subpart+1)/args.n_part)*len(raw_dataset))

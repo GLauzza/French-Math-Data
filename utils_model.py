@@ -60,7 +60,7 @@ USER_INSTRUCTIONS = {
         ""
     ),
     "translation_question": (
-        "Please translate sentence by sentence the full following question in French.\n"
+        "Please translate the full following question in French.\n"
         "- Only output the translation.\n"
         "- Only translate what is after <|Question|>.\n"
         "- Don't solve the problem, only translate.\n"
@@ -78,7 +78,7 @@ USER_INSTRUCTIONS = {
         "<|Text|>\n"
     ),
     "translation_answer": (
-        "Please translate sentence by sentence the full following answer in French.\n"
+        "Please translate the full following answer in French.\n"
         "- Only output the translation.\n"
         "- Only translate what is after <|Answer|>.\n"
         "- Preserve any mathematical formula formatting.\n"
@@ -275,11 +275,12 @@ def to_chat_template_qwen_2_5(task, start_thinking):
 
 def to_chat_template_qwen_3(task, start_thinking):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
-    think = "<think>\n"*start_thinking
+    think = "<think>\n"*(start_thinking or task.startswith("translation"))
+    close_think = "\n</think>\n\n"*(task.startswith("translation"))
     return (lambda x : (
         f"<|im_start|>system\n{SYSTEM_INSTRUCTIONS[task]}<|im_end|>\n"
         f"<|im_start|>user\n{USER_INSTRUCTIONS[task]}{x}<|im_end|>\n"
-        f"<|im_start|>assistant\n{think}{language_forcing}"
+        f"<|im_start|>assistant\n{think}{language_forcing}{close_think}"
     ))
 
 
@@ -337,31 +338,38 @@ def to_chat_template_mistral(task, start_thinking):
         f"First draft your thinking process (inner monologue) until you arrive at a response. Format your response using Markdown, and use LaTeX for any mathematical equations. Write both your thoughts and the response in the same language as the input.\n\nYour thinking process must follow the template below:[THINK]Your thoughts or/and draft, like working through an exercise on scratch paper. Be as casual and as long as you want until you are confident to generate the response. Use the same language as the input.[/THINK]Here, provide a self-contained response.\n"
     ))
 
+def to_chat_template_llama(task, start_thinking):
+    return (lambda x : (
+        f"<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are a helpful assistant. {SYSTEM_INSTRUCTIONS[task]}<|eot_id|>"
+        f"<|start_header_id|>user<|end_header_id|>\n\n{USER_INSTRUCTIONS[task]}{x}<|eot_id|>"
+        f"<|start_header_id|>assistant<|end_header_id|>\n\n"
+    ))
+
 # no thinking yet and only math
 def to_chat_template_luciole(task, start_thinking):
     language_forcing = "D'accord, laisse moi y réfléchir."*(task == "math_fr")
     think = "<think>\n"*start_thinking
 
-    # Llama-nemotron-post-training v2 (post train)
-    # return (lambda x : (
-    #     f"<|im_start|>system\nYou are a helpful math assistant.<|im_end|>\n"
-    #     f"<|im_start|>user\nSolve the following math problem. Make sure to put the answer (and only answer) inside \\boxed{{}}.\n\n{x}<|im_end|>\n"
-    #     f"<|im_start|>assistant\n"
-    # ))
-
-    # Llama-nemotron-post-training v1
+    # Llama-nemotron-post-training v2 (post train) (0.2 GSM)
     return (lambda x : (
-        f"Question:\n{x}\nThoughts:\n"
+        f"<|im_start|>system\nYou are a helpful math assistant.<|im_end|>\n"
+        f"<|im_start|>user\nSolve the following math problem. Make sure to put the answer (and only answer) inside \\boxed{{}}.\n\n{x}<|im_end|>\n"
+        f"<|im_start|>assistant\n"
     ))
 
-    # OpenMathInstruct
+    # Llama-nemotron-post-training v1 (0.05 GSM)
+    # return (lambda x : (
+    #     f"Question:\n{x}\nThoughts:\n"
+    # ))
+
+    # OpenMathInstruct (0.02 GSM)
     # return (lambda x : (
     #     f"{x}\n"
     # ))
 
-    # Llama-nemotron-post-training v2
+    # Llama-nemotron-post-training v2 (0.11 GSM)
     # return (lambda x : (
-    #     f"Question:\nSolve the following math problem. Make sure to put the answer (and only answer) inside \\boxed{}.\n\n{x}\n"
+    #     f"Question:\nSolve the following math problem. Make sure to put the answer (and only answer) inside \\boxed{{}}.\n\n{x}\n"
     # ))
 
 
@@ -434,7 +442,7 @@ def get_config(name, task="math", n=1, max_length=1000000, start_thinking=False)
     elif name.startswith("Llama"):
         return (
             f"meta-llama/{name}", 
-            to_chat_template_luciole(task, start_thinking),
+            to_chat_template_llama(task, start_thinking),
             SamplingParams(n=n, temperature=0.7, top_p=0.95, max_tokens=min(38912, max_length), seed=0),
         )
     elif name.startswith("gpt-oss"):

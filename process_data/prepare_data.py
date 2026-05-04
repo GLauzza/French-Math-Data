@@ -193,6 +193,7 @@ def prepare_sorted_inference_data(dataset, chat_template_fun, batch_size=-1, inp
 
     if batch_size == -1:
         batch_size = len(dataset)
+
     if use_only_input:
         dataloader = DataLoader(dataset["chat_input"], batch_size=batch_size, shuffle=False)
     else:
