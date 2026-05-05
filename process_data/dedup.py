@@ -115,7 +115,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Performs a task on a dataset using a model')
     parser.add_argument('--model', type=str, default="Qwen3-32B-FP8-dynamic", help='Model to use for embedding')
     parser.add_argument('--dataset', type=str, default="Fused-CoT", help='Dataset to dedup')
-    parser.add_argument('--threshold', type=float, default=0.88, help='Threshold for self_deduplicate (default: 0.77)')
+    parser.add_argument('--threshold', type=float, default=0.88, help='Threshold for self_deduplicate (default: 0.88)')
     parser.add_argument('--n', type=int, default=1, help='Number of samples to keep per duplicate group (default: 1)')
     parser.add_argument('--criterion', type=str, default="shortest_cot", help='Criterion to select which samples of duplicates to keep')
     args = parser.parse_args()
